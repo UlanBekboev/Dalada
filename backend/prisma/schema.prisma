@@ -6,10 +6,50 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String?  @unique
+  phone     String?  @unique
+  password  String?            // пароль не обязателен при OTP
+  role      Role
+  provider  String?
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+}
+
+model OTP {
+  id          String      @id @default(uuid())
+  identifier  String      // email или телефон (нормализованный)
+  role        Role        // роль выбрана на 1-м экране
+  intent      OTPIntent   // LOGIN или REGISTER
+  channel     OTPChannel  // EMAIL или PHONE
+  codeHash    String      // sha256(код + перец)
+  expiresAt   DateTime
+  createdAt   DateTime    @default(now())
+  usedAt      DateTime?
+
+  @@index([identifier])
+}
+
+enum Role {
+  CANDIDATE
+  EMPLOYER
+}
+
+enum OTPIntent {
+  LOGIN
+  REGISTER
+}
+
+enum OTPChannel {
+  EMAIL
+  PHONE
 }
