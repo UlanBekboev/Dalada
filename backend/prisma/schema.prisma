@@ -17,24 +17,28 @@ model User {
   id        String   @id @default(uuid())
   email     String?  @unique
   phone     String?  @unique
-  password  String?            // пароль не обязателен при OTP
+  password  String? // пароль не обязателен при OTP
   role      Role
   provider  String?
   name      String?
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  // Профили (один к одному)
+  candidateProfile CandidateProfile?
+  employerProfile  EmployerProfile?
 }
 
 model OTP {
-  id          String      @id @default(uuid())
-  identifier  String      // email или телефон (нормализованный)
-  role        Role        // роль выбрана на 1-м экране
-  intent      OTPIntent   // LOGIN или REGISTER
-  channel     OTPChannel  // EMAIL или PHONE
-  codeHash    String      // sha256(код + перец)
-  expiresAt   DateTime
-  createdAt   DateTime    @default(now())
-  usedAt      DateTime?
+  id         String     @id @default(uuid())
+  identifier String // email или телефон (нормализованный)
+  role       Role // роль выбрана на 1-м экране
+  intent     OTPIntent // LOGIN или REGISTER
+  channel    OTPChannel // EMAIL или PHONE
+  codeHash   String // sha256(код + перец)
+  expiresAt  DateTime
+  createdAt  DateTime   @default(now())
+  usedAt     DateTime?
 
   @@index([identifier])
 }
@@ -52,4 +56,69 @@ enum OTPIntent {
 enum OTPChannel {
   EMAIL
   PHONE
+}
+
+model CandidateProfile {
+  id              String              @id @default(uuid())
+  userId          String              @unique // Связь с таблицей пользователей
+  fullName        String
+  age             Int?
+  city            String?
+  country         String?
+  experience      String? // Можно сделать enum или текст
+  skills          String[] // массив навыков
+  education       String?
+  desiredRole     String? // Желаемая должность
+  salary          Int? // Желаемая зарплата
+  timezones       String[] // Массив часовых поясов, например ["UTC+3", "UTC+5"]
+  languages       CandidateLanguage[] // [{ name: "English", level: "B2" }, ...]
+  photoUrl        String?
+  resumeUrl       String?
+  certificateUrls String[]
+  videoUrl        String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model CandidateLanguage {
+  id          String           @id @default(uuid())
+  candidateId String
+  candidate   CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  language String
+  level    LanguageLevel
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([candidateId, language])
+}
+
+enum LanguageLevel {
+  A1
+  A2
+  B1
+  B2
+  C1
+  C2
+  NATIVE
+}
+
+model EmployerProfile {
+  id          String   @id @default(uuid())
+  userId      String   @unique // Внешний ключ на User
+  companyName String
+  industry    String
+  contactName String
+  phone       String? // опционально
+  email       String? // опционально
+  description String? // опционально
+  legalInfo   String? // опционально
+  logoUrl     String? // опционально
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

@@ -7,6 +7,7 @@ const router = Router();
 
 router.post("/otp/send", sendOtp);
 router.post("/otp/verify", verifyOtp);
+
 router.get("/google", redirectToGoogle);
 router.get("/google/callback", googleCallback);
 router.get("/facebook", redirectToFacebook);
