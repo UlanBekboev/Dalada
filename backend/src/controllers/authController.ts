@@ -104,7 +104,13 @@ export const sendOtp = async (req: Request, res: Response) => {
     }
 
     // Инвалидируем прошлые коды для этого identifier
-    await prisma.oTP.deleteMany({ where: { identifier } });
+    await prisma.oTP.deleteMany({ 
+      where: {
+        identifier,
+        intent, // только коды того же intent
+        expiresAt: { lt: new Date() }, // можно удалять устаревшие
+      },
+     });
 
     // Генерируем и сохраняем новый
     const code = generateOTP();
@@ -205,10 +211,10 @@ export const verifyOtp = async (req: Request, res: Response) => {
     if (!user) {
         return res.status(500).json({ message: "Ошибка: пользователь не найден после верификации" });
     }
-
     const accessToken = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, {
       expiresIn: ACCESS_TTL,
     });
+    console.log("JWT_SECRET при генерации:", process.env.JWT_SECRET);
     const refreshToken = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: REFRESH_TTL });
 
     return res.json({

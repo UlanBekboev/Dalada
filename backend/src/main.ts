@@ -3,7 +3,10 @@ import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 import cors from "cors";
 import authRoutes from "./routes/authRoutes.js";
+import profileRoutes from "./routes/profileRoutes.js";
 import passport from 'passport';
+import uploadFileRoutes from './routes/uploadFileRoutes.js';
+//import path from "path";
 
 dotenv.config();
 
@@ -17,8 +20,11 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(passport.initialize());
 
+//app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 app.use("/auth", authRoutes);
-app.get("/", (req: Request, res: Response) => {
+app.use("/profile", profileRoutes);
+app.use("/", uploadFileRoutes);
+app.get("/api", (req: Request, res: Response) => {
     res.send("Dalada работает!");
 });
 
