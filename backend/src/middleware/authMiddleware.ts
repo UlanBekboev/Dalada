@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
 export interface AuthRequest extends Request {
-  user?: { userId: string; role?: string };
+  user?: { userId?: string; role?: string };
 }
 
 interface JwtPayload {
@@ -11,28 +11,25 @@ interface JwtPayload {
 }
 
 export const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  console.log("Auth middleware called");
   const token = req.headers.authorization?.split(" ")[1];
-
-  console.log("Cookies:", req.cookies);
-  console.log("Authorization header:", req.headers.authorization);
-  console.log("Token from header:", token);
+  console.log("Token:", token);
 
   if (!token) {
+    console.log("No token provided");
     return res.status(401).json({ message: "Нет токена, авторизация отклонена" });
   }
-  console.log("Token:", token);
-  // Логируем payload даже без проверки подписи
-  const decodedRaw = jwt.decode(token) as JwtPayload | null;
-  console.log("Decoded payload (без проверки подписи):", decodedRaw);
 
   try {
-    console.log("JWT_SECRET при проверке:", `${process.env.JWT_SECRET}`);
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
-    console.log("Decoded payload (после проверки подписи):", decoded);
+    console.log("Decoded token:", decoded);
 
-    const userId = decoded.userId; // иногда поле называется user_id
-    (req as AuthRequest).user = { userId: userId!, role: decoded.role };
-
+    (req as AuthRequest).user = { 
+      userId: decoded.userId, 
+      role: decoded.role 
+    };
+    
+    console.log("User set to:", (req as AuthRequest).user);
     next();
   } catch (err) {
     console.error("JWT verify error:", err);

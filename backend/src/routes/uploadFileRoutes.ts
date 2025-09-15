@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { authMiddleware, AuthRequest } from '../middleware/authMiddleware.js';
+import { authMiddleware } from '../middleware/authMiddleware.js';
 import {
   upsertCandidateLanguage,
   deleteCandidateLanguage,
@@ -17,26 +17,37 @@ import {
   addTimezone,
   getTimezones,
   removeTimezone,
-} from '../controllers/uploadFiles.js';
+  getResume,
+  deleteResume,
+  uploadChatFile,
+} from '../controllers/vacancyUploadFiles.js';
+import { 
+  resumeUpload, 
+  employerLogoUpload, 
+  candidatePhotoUpload,
+  chatUpload 
+} from '../middleware/uploadMiddleware.js';
 
 const router = Router();
 
-router.patch('/candidate/languages', authMiddleware, (req, res) => upsertCandidateLanguage(req as AuthRequest, res));
-router.delete('/candidate/languages/:language', authMiddleware, (req, res) =>
-  deleteCandidateLanguage(req as AuthRequest, res),
-);
-router.patch('/candidate/certificate', authMiddleware, (req, res) => addCertificate(req as AuthRequest, res));
-router.delete('/candidate/certificate', authMiddleware, (req, res) => removeCertificate(req as AuthRequest, res));
-router.patch('/candidate/video', authMiddleware, (req, res) => uploadVideo(req as AuthRequest, res));
-router.delete('/candidate/video', authMiddleware, (req, res) => removeVideo(req as AuthRequest, res));
-router.patch('/candidate/resume', authMiddleware, (req, res) => uploadResume(req as AuthRequest, res));
-router.patch('candidate/photo', authMiddleware, (req, res) => uploadPhoto(req as AuthRequest, res));
-router.delete('candidate/photo', authMiddleware, (req, res) => removePhoto(req as AuthRequest, res));
-router.get('candidate/timezones', authMiddleware, (req, res) => getTimezones(req as AuthRequest, res));
-router.patch('candidate/timezones', authMiddleware, (req, res) => addTimezone(req as AuthRequest, res));
-router.delete('candidate/timezones', authMiddleware, (req, res) => removeTimezone(req as AuthRequest, res));
+router.patch('/candidate/languages', authMiddleware, upsertCandidateLanguage);
+router.delete('/candidate/languages/:language', authMiddleware, deleteCandidateLanguage);
+router.patch('/candidate/certificate', authMiddleware, addCertificate);
+router.delete('/candidate/certificate', authMiddleware, removeCertificate);
+router.patch('/candidate/video', authMiddleware, uploadVideo);
+router.delete('/candidate/video', authMiddleware, removeVideo);
+router.post('/resume/upload', authMiddleware, resumeUpload.single('resume'), uploadResume);
+router.get('/resume', authMiddleware, getResume);
+router.delete('/resume', authMiddleware, deleteResume);
+router.patch('/candidate/photo', authMiddleware, candidatePhotoUpload.single('photo'), uploadPhoto);
+router.delete('/candidate/photo', authMiddleware, removePhoto);
+router.get('/candidate/timezones', authMiddleware, getTimezones);
+router.patch('/candidate/timezones', authMiddleware, addTimezone);
+router.delete('/candidate/timezones', authMiddleware, removeTimezone);
 
-router.delete('employer/logo', authMiddleware, (req, res) => deleteEmployerLogo(req as AuthRequest, res));
-router.patch('employer/logo', authMiddleware, (req, res) => uploadEmployerLogo(req as AuthRequest, res));
+router.delete('/employer/logo', authMiddleware, deleteEmployerLogo);
+router.patch('/employer/upload-logo', authMiddleware, employerLogoUpload.single('logo'), uploadEmployerLogo);
+
+router.post('/upload-file', authMiddleware, chatUpload.single('file'), uploadChatFile);
 
 export default router;

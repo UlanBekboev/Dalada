@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -27,6 +21,20 @@ model User {
   // Профили (один к одному)
   candidateProfile CandidateProfile?
   employerProfile  EmployerProfile?
+
+  responses       Response[]
+  ChatParticipant ChatParticipant[]
+  Message         Message[]
+
+  // избранные
+  favoriteVacancies    CandidateFavoriteVacancy[] // кандидат → вакансии
+  favoriteCandidates   EmployerFavoriteCandidate[] @relation("FavoriteEmployer") // работодатель → кандидаты
+  favoritedByEmployers EmployerFavoriteCandidate[] @relation("FavoriteCandidate") // кандидат в избранном у работодателей
+  ReadReceipt          ReadReceipt[]
+
+  @@index([email])
+  @@index([phone])
+  @@index([createdAt])
 }
 
 model OTP {
@@ -41,6 +49,8 @@ model OTP {
   usedAt     DateTime?
 
   @@index([identifier])
+  @@index([expiresAt])
+  @@index([createdAt])
 }
 
 enum Role {
@@ -120,5 +130,172 @@ model EmployerProfile {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Vacancy Vacancy[]
+}
+
+model Response {
+  id          String         @id @default(uuid())
+  vacancy     Vacancy        @relation(fields: [vacancyId], references: [id])
+  vacancyId   String
+  user        User           @relation(fields: [userId], references: [id])
+  userId      String
+  status      ResponseStatus @default(IN_PROGRESS)
+  coverLetter String?
+  resumeUrls  String[] // массив ссылок на резюме (PDF/Word)
+
+  createdAt DateTime @default(now())
+
+  statusHistory ResponseStatusHistory[]
+
+  @@unique([vacancyId, userId]) // один отклик на пару (вакансия + соискатель)
+}
+
+model ResponseStatusHistory {
+  id         String         @id @default(cuid())
+  responseId String
+  status     ResponseStatus
+  changedAt  DateTime       @default(now())
+
+  response Response @relation(fields: [responseId], references: [id])
+}
+
+enum ResponseStatus {
+  IN_PROGRESS
+  REVIEWED
+  REJECTED
+  ACCEPTED
+  FAVORITE
+}
+
+model Vacancy {
+  id         String          @id @default(uuid())
+  employerId String
+  employer   EmployerProfile @relation(fields: [employerId], references: [id], onDelete: Cascade)
+
+  title          String // название вакансии
+  city           String? // город
+  salaryFrom     Int? // зарплата от
+  salaryTo       Int? // зарплата до
+  currency       String? // валюта
+  schedule       String? // график (например: полный день, удалёнка)
+  experienceFrom Int? // опыт от
+  experienceTo   Int? // опыт до
+  description    String? // описание
+
+  timezone       String? // один часовой пояс
+  employmentType String? // тип занятости (полная, частичная, проект)
+  location       String? // местоположение
+
+  phone     String?
+  email     String?
+  messenger String?
+
+  hidePhone Boolean @default(false)
+  hideEmail Boolean @default(false)
+
+  status      VacancyStatus @default(DRAFT) // DRAFT или PUBLISHED
+  publishedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  views          Int @default(0) // просмотры вакансии
+  responsesCount Int @default(0) // количество откликов
+
+  responses                 Response[]
+  CandidateFavoriteVacancy  CandidateFavoriteVacancy[]
+  EmployerFavoriteCandidate EmployerFavoriteCandidate[]
+}
+
+enum VacancyStatus {
+  DRAFT
+  PUBLISHED
+}
+
+model Chat {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // участники
+  participants ChatParticipant[]
+
+  // сообщения
+  messages Message[]
+
+  @@index([updatedAt]) // Добавлен индекс для сортировки чатов
+}
+
+model ChatParticipant {
+  id     String @id @default(cuid())
+  chatId String
+  userId String // может быть кандидат или работодатель
+  role   Role // "CANDIDATE" | "EMPLOYER"
+
+  chat Chat @relation(fields: [chatId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([chatId, userId]) // один юзер — один раз в чате
+  @@index([userId]) // Добавлен индекс для поиска чатов пользователя
+  @@index([chatId]) // Добавлен индекс для поиска участников чата
+}
+
+model Message {
+  id       String  @id @default(cuid())
+  chatId   String
+  senderId String // userId
+  text     String?
+
+  createdAt DateTime @default(now())
+
+  chat   Chat @relation(fields: [chatId], references: [id])
+  sender User @relation(fields: [senderId], references: [id])
+
+  fileUrl     String? // поддержка файла
+  fileName    String? // Оригинальное имя файла
+  fileType    String? // MIME-type файла
+  fileSize    Int? // Размер файла в байтах
+  ReadReceipt ReadReceipt[]
+
+  @@index([chatId, createdAt]) // Добавлен индекс для поиска сообщений чата
+  @@index([senderId])
+  @@index([createdAt])
+}
+
+model CandidateFavoriteVacancy {
+  id              String   @id @default(cuid())
+  vacancyId       String
+  candidateUserId String
+  createdAt       DateTime @default(now())
+
+  vacancy   Vacancy @relation(fields: [vacancyId], references: [id], onDelete: Cascade)
+  candidate User    @relation(fields: [candidateUserId], references: [id], onDelete: Cascade)
+
+  @@unique([vacancyId, candidateUserId]) // предотвращает дубли
+}
+
+model EmployerFavoriteCandidate {
+  id              String   @id @default(cuid())
+  vacancyId       String
+  candidateUserId String
+  employerUserId  String
+  createdAt       DateTime @default(now())
+
+  vacancy   Vacancy @relation(fields: [vacancyId], references: [id], onDelete: Cascade)
+  candidate User    @relation("FavoriteCandidate", fields: [candidateUserId], references: [id], onDelete: Cascade)
+  employer  User    @relation("FavoriteEmployer", fields: [employerUserId], references: [id], onDelete: Cascade)
+
+  @@unique([vacancyId, candidateUserId])
+}
+
+model ReadReceipt {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  readAt    DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
 }

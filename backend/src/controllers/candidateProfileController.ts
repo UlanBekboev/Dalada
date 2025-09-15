@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { prisma } from '../prismaClient.js';
 import { AuthRequest } from '../middleware/authMiddleware.js';
+import { Prisma, PrismaClient } from "@prisma/client";
 
 // helper: нормализуем уровень под enum Prisma
 const normalizeLevel = (val: any) => {
@@ -111,7 +112,7 @@ export const updateCandidateProfile = async (req: AuthRequest, res: Response) =>
 
     const langs = parseLanguages(languages);
 
-    const updated = await prisma.$transaction(async (tx) => {
+    const updated = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const p = await tx.candidateProfile.update({
         where: { userId },
         data: {

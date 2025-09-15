@@ -6,11 +6,24 @@ import authRoutes from "./routes/authRoutes.js";
 import profileRoutes from "./routes/profileRoutes.js";
 import passport from 'passport';
 import uploadFileRoutes from './routes/uploadFileRoutes.js';
-//import path from "path";
+import vacancyRoutes from './routes/vacancyRoutes.js';
+import chatRoutes from './routes/chatRouts.js';
+import favorites from './routes/favorites.js'
+import { createServer } from 'http';
+import { initSocketIO } from './sockets/socketHandler.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
+const server = createServer(app);
+
+// Инициализация Socket.io
+initSocketIO(server);
 
 app.use(cors({
   origin: process.env.CLIENT_ORIGIN || "http://localhost:3000",
@@ -20,10 +33,18 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(passport.initialize());
 
-//app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
+// Обслуживание статических файлов
+app.use('/uploads/employer-logos', express.static(path.join(__dirname, 'uploads/employer-logos')));
+app.use('/uploads/candidate-photos', express.static(path.join(__dirname, 'uploads/candidate-photos')));
+app.use('/uploads/chat-files', express.static(path.join(__dirname, 'uploads/chat-files')));
+app.use('/uploads/resumes', express.static(path.join(__dirname, 'uploads/resumes')));
+
 app.use("/auth", authRoutes);
 app.use("/profile", profileRoutes);
-app.use("/", uploadFileRoutes);
+app.use("/api", uploadFileRoutes);
+app.use("/vacancy", vacancyRoutes);
+app.use("/api/chats", chatRoutes);
+app.use("/vacancy", favorites)
 app.get("/api", (req: Request, res: Response) => {
     res.send("Dalada работает!");
 });

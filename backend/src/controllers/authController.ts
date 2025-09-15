@@ -8,7 +8,7 @@ const RESEND_WINDOW_MS = 60 * 1000;        // 60 сек (кнопка "отпр�
 const CODE_TTL_MS = 5 * 60 * 1000;        // 5 минут жизни кода
 const OTP_PEPPER = process.env.OTP_PEPPER || "";
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
-const ACCESS_TTL = "15m";
+const ACCESS_TTL = "55m";
 const REFRESH_TTL = "7d";
 
 // 6-значный код
@@ -214,7 +214,6 @@ export const verifyOtp = async (req: Request, res: Response) => {
     const accessToken = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, {
       expiresIn: ACCESS_TTL,
     });
-    console.log("JWT_SECRET при генерации:", process.env.JWT_SECRET);
     const refreshToken = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: REFRESH_TTL });
 
     return res.json({
@@ -225,6 +224,66 @@ export const verifyOtp = async (req: Request, res: Response) => {
     });
   } catch (e) {
     console.error(e);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+//Google and Facebook
+export const oauthCallback = async (req: Request, res: Response) => {
+  try {
+    const { role, intent } = req.query as {
+      role?: Role;
+      intent?: OTPIntent;
+    };
+
+    const userFromPassport = req.user as any; // { email, provider } или user
+    if (!userFromPassport) {
+      return res.status(400).json({ message: "Ошибка аутентификации" });
+    }
+
+    const email = userFromPassport.email;
+
+    let user = await prisma.user.findUnique({ where: { email } });
+
+    if (intent === "REGISTER") {
+      if (user) {
+        return res.status(409).json({ message: "Пользователь уже существует" });
+      }
+      if (!role) {
+        return res.status(400).json({ message: "Role is required" });
+      }
+      user = await prisma.user.create({
+        data: {
+          email,
+          role,
+          // phone: null (для Facebook/Google логина обычно только email)
+        },
+      });
+    }
+
+    if (intent === "LOGIN") {
+      if (!user) {
+        return res.status(404).json({ message: "Пользователь не найден" });
+      }
+    }
+
+    if (!user) {
+      return res.status(500).json({ message: "Не удалось создать/найти пользователя" });
+    }
+
+    const accessToken = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, {
+      expiresIn: ACCESS_TTL,
+    });
+    const refreshToken = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: REFRESH_TTL });
+
+    return res.json({
+      message: "Успешная авторизация через " + userFromPassport.provider,
+      user,
+      accessToken,
+      refreshToken,
+    });
+  } catch (err) {
+    console.error(err);
     return res.status(500).json({ message: "Server error" });
   }
 };
