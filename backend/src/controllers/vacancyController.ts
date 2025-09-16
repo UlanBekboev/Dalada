@@ -374,3 +374,262 @@ export const getVacancyDescriptionById = async (req: AuthRequest, res: Response)
   }
 };
 
+
+/**
+ * @swagger
+ * tags:
+ *   - name: Vacancy
+ *     description: "Вакансии и отклики"
+ *
+ * paths:
+ *   /vacancy:
+ *     post:
+ *       summary: "Создать вакансию (черновик)"
+ *       tags: [Vacancy]
+ *       security:
+ *         - bearerAuth: []
+ *       requestBody:
+ *         required: true
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VacancyInput'
+ *       responses:
+ *         201:
+ *           description: "Вакансия создана (черновик)"
+ *         401:
+ *           description: "Unauthorized"
+ *
+ *     get:
+ *       summary: "Список вакансий с фильтрацией и сортировкой"
+ *       tags: [Vacancy]
+ *       parameters:
+ *         - in: query
+ *           name: q
+ *           schema:
+ *             type: string
+ *         - in: query
+ *           name: titles
+ *           schema:
+ *             type: array
+ *             items:
+ *               type: string
+ *         - in: query
+ *           name: cities
+ *           schema:
+ *             type: array
+ *             items:
+ *               type: string
+ *         - in: query
+ *           name: salaryFrom
+ *           schema:
+ *             type: number
+ *         - in: query
+ *           name: salaryTo
+ *           schema:
+ *             type: number
+ *         - in: query
+ *           name: schedules
+ *           schema:
+ *             type: array
+ *             items:
+ *               type: string
+ *         - in: query
+ *           name: experienceFrom
+ *           schema:
+ *             type: number
+ *         - in: query
+ *           name: experienceTo
+ *           schema:
+ *             type: number
+ *         - in: query
+ *           name: sort
+ *           schema:
+ *             type: string
+ *             enum: [recommended, new, popular]
+ *       responses:
+ *         200:
+ *           description: "Список вакансий"
+ *
+ *   /vacancy/{id}:
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *
+ *     get:
+ *       summary: "Получить вакансию по ID (увеличивает views)"
+ *       tags: [Vacancy]
+ *       responses:
+ *         200:
+ *           description: "Вакансия с деталями"
+ *         404:
+ *           description: "Vacancy not found"
+ *
+ *     put:
+ *       summary: "Обновить вакансию (только владелец)"
+ *       tags: [Vacancy]
+ *       security:
+ *         - bearerAuth: []
+ *       requestBody:
+ *         required: true
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/VacancyInput'
+ *       responses:
+ *         200:
+ *           description: "Вакансия обновлена"
+ *         404:
+ *           description: "Вакансия не найдена"
+ *
+ *     delete:
+ *       summary: "Удалить вакансию (только владелец)"
+ *       tags: [Vacancy]
+ *       security:
+ *         - bearerAuth: []
+ *       responses:
+ *         200:
+ *           description: "Вакансия удалена"
+ *         404:
+ *           description: "Вакансия не найдена"
+ *
+ *   /vacancy/{id}/publish:
+ *     post:
+ *       summary: "Опубликовать вакансию (только владелец)"
+ *       tags: [Vacancy]
+ *       security:
+ *         - bearerAuth: []
+ *       parameters:
+ *         - in: path
+ *           name: id
+ *           required: true
+ *           schema:
+ *             type: string
+ *       responses:
+ *         200:
+ *           description: "Вакансия опубликована"
+ *         404:
+ *           description: "Вакансия не найдена или нет прав"
+ *
+ *   /vacancy/{id}/respond:
+ *     post:
+ *       summary: "Откликнуться на вакансию (только кандидат)"
+ *       tags: [Vacancy]
+ *       security:
+ *         - bearerAuth: []
+ *       parameters:
+ *         - in: path
+ *           name: id
+ *           required: true
+ *           schema:
+ *             type: string
+ *       requestBody:
+ *         required: true
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 coverLetter:
+ *                   type: string
+ *                 resumes:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *       responses:
+ *         200:
+ *           description: "Отклик отправлен"
+ *         400:
+ *           description: "Вы уже откликались или некорректные данные"
+ *         401:
+ *           description: "Unauthorized"
+ *         403:
+ *           description: "Доступ только для кандидатов"
+ *         404:
+ *           description: "Vacancy not found"
+ *
+ *   /vacancy/{id}/responses:
+ *     get:
+ *       summary: "Получить отклики на вакансию (только владелец)"
+ *       tags: [Vacancy]
+ *       security:
+ *         - bearerAuth: []
+ *       parameters:
+ *         - in: path
+ *           name: id
+ *           required: true
+ *           schema:
+ *             type: string
+ *       responses:
+ *         200:
+ *           description: "Список откликов"
+ *         404:
+ *           description: "Vacancy not found"
+ *
+ *   /vacancy/{id}/description:
+ *     get:
+ *       summary: "Получить описание вакансии с информацией о контактах и флагом отклика"
+ *       tags: [Vacancy]
+ *       security:
+ *         - bearerAuth: []
+ *       parameters:
+ *         - in: path
+ *           name: id
+ *           required: true
+ *           schema:
+ *             type: string
+ *       responses:
+ *         200:
+ *           description: "Детали вакансии"
+ *         404:
+ *           description: "Vacancy not found"
+ *
+ * components:
+ *   schemas:
+ *     VacancyInput:
+ *       type: object
+ *       properties:
+ *         title:
+ *           type: string
+ *         city:
+ *           type: string
+ *         salaryFrom:
+ *           type: number
+ *         salaryTo:
+ *           type: number
+ *         currency:
+ *           type: string
+ *         schedule:
+ *           type: string
+ *         experienceFrom:
+ *           type: number
+ *         experienceTo:
+ *           type: number
+ *         description:
+ *           type: string
+ *         timezone:
+ *           type: string
+ *         employmentType:
+ *           type: string
+ *         location:
+ *           type: string
+ *         phone:
+ *           type: string
+ *         email:
+ *           type: string
+ *         messenger:
+ *           type: string
+ *         hidePhone:
+ *           type: boolean
+ *         hideEmail:
+ *           type: boolean
+ *
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ */

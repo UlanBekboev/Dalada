@@ -524,3 +524,442 @@ export const uploadChatFile = [
     }
   }
 ];
+
+/**
+ * @swagger
+ * tags:
+ *   - name: Files
+ *     description: "Управление файлами (резюме, сертификаты, видео, логотипы, фото)"
+ *   - name: Candidate
+ *     description: "Управление профилем кандидата"
+ *   - name: Employer
+ *     description: "Управление профилем работодателя"
+ *   - name: Chat
+ *     description: "Загрузка файлов для чата"
+ *
+ * components:
+ *   schemas:
+ *     FileUploadResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *         fileUrl:
+ *           type: string
+ *         fileName:
+ *           type: string
+ *         fileSize:
+ *           type: number
+ *         fileType:
+ *           type: string
+ *     ErrorResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *         error:
+ *           type: string
+ *     CertificateRequest:
+ *       type: object
+ *       required:
+ *         - certificateUrl
+ *       properties:
+ *         certificateUrl:
+ *           type: string
+ *     TimezoneRequest:
+ *       type: object
+ *       required:
+ *         - timezone
+ *       properties:
+ *         timezone:
+ *           type: string
+ *           example: "UTC+6"
+ *     TimezoneResponse:
+ *       type: object
+ *       properties:
+ *         timezones:
+ *           type: array
+ *           items:
+ *             type: string
+ *     ChatFileUploadRequest:
+ *       type: object
+ *       properties:
+ *         chatId:
+ *           type: string
+ *
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ */
+
+/**
+ * @swagger
+ * /candidate/resume:
+ *   post:
+ *     summary: "Загрузить резюме (только кандидат)"
+ *     tags: [Files]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: "Файл резюме (PDF, DOC, DOCX)"
+ *     responses:
+ *       200:
+ *         description: "Резюме загружено"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/FileUploadResponse'
+ *       401:
+ *         description: "Не авторизован"
+ *       403:
+ *         description: "Только кандидаты могут загружать резюме"
+ *       500:
+ *         description: "Ошибка при загрузке резюме"
+ */
+
+/**
+ * @swagger
+ * /candidate/resume:
+ *   get:
+ *     summary: "Получить резюме (только кандидат)"
+ *     tags: [Files]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: "Файл резюме"
+ *         content:
+ *           application/pdf:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *           application/msword:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *           application/vnd.openxmlformats-officedocument.wordprocessingml.document:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       401:
+ *         description: "Не авторизован"
+ *       403:
+ *         description: "Только кандидаты могут просматривать резюме"
+ *       404:
+ *         description: "Резюме не найдено"
+ *       500:
+ *         description: "Ошибка при получении резюме"
+ */
+
+/**
+ * @swagger
+ * /candidate/resume:
+ *   delete:
+ *     summary: "Удалить резюме (только кандидат)"
+ *     tags: [Files]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: "Резюме удалено"
+ *       401:
+ *         description: "Не авторизован"
+ *       403:
+ *         description: "Только кандидаты могут удалять резюме"
+ *       404:
+ *         description: "Резюме не найдено"
+ *       500:
+ *         description: "Ошибка при удалении резюме"
+ */
+
+/**
+ * @swagger
+ * /candidate/certificate:
+ *   post:
+ *     summary: "Добавить сертификат (только кандидат)"
+ *     tags: [Candidate]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CertificateRequest'
+ *     responses:
+ *       200:
+ *         description: "Сертификат добавлен"
+ *       401:
+ *         description: "Не авторизован"
+ *       500:
+ *         description: "Ошибка при загрузке сертификата"
+ */
+
+/**
+ * @swagger
+ * /candidate/certificate:
+ *   delete:
+ *     summary: "Удалить сертификат (только кандидат)"
+ *     tags: [Candidate]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CertificateRequest'
+ *     responses:
+ *       200:
+ *         description: "Сертификат удален"
+ *       401:
+ *         description: "Не авторизован"
+ *       500:
+ *         description: "Ошибка при удалении сертификата"
+ */
+
+/**
+ * @swagger
+ * /candidate/video:
+ *   post:
+ *     summary: "Загрузить видео (только кандидат)"
+ *     tags: [Candidate]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               videoUrl:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: "Видео загружено"
+ *       401:
+ *         description: "Не авторизован"
+ *       500:
+ *         description: "Ошибка при загрузке видео"
+ */
+
+/**
+ * @swagger
+ * /candidate/video:
+ *   delete:
+ *     summary: "Удалить видео (только кандидат)"
+ *     tags: [Candidate]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: "Видео удалено"
+ *       401:
+ *         description: "Не авторизован"
+ *       500:
+ *         description: "Ошибка при удалении видео"
+ */
+
+/**
+ * @swagger
+ * /employer/logo:
+ *   post:
+ *     summary: "Загрузить логотип работодателя"
+ *     tags: [Employer]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: "Логотип загружен"
+ *       401:
+ *         description: "Не авторизован"
+ *       500:
+ *         description: "Ошибка при загрузке логотипа"
+ */
+
+/**
+ * @swagger
+ * /employer/logo:
+ *   delete:
+ *     summary: "Удалить логотип работодателя"
+ *     tags: [Employer]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: "Логотип удалён"
+ *       401:
+ *         description: "Не авторизован"
+ *       500:
+ *         description: "Ошибка при удалении логотипа"
+ */
+
+/**
+ * @swagger
+ * /candidate/photo:
+ *   post:
+ *     summary: "Загрузить фото кандидата"
+ *     tags: [Candidate]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: "Фото загружено"
+ *       401:
+ *         description: "Не авторизован"
+ *       500:
+ *         description: "Ошибка при загрузке фото"
+ */
+
+/**
+ * @swagger
+ * /candidate/photo:
+ *   delete:
+ *     summary: "Удалить фото кандидата"
+ *     tags: [Candidate]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: "Фото удалено"
+ *       401:
+ *         description: "Не авторизован"
+ *       500:
+ *         description: "Ошибка при удалении фото"
+ */
+
+/**
+ * @swagger
+ * /candidate/timezone:
+ *   post:
+ *     summary: "Добавить часовой пояс кандидата"
+ *     tags: [Candidate]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/TimezoneRequest'
+ *     responses:
+ *       200:
+ *         description: "Часовой пояс добавлен"
+ *       401:
+ *         description: "Не авторизован"
+ *       500:
+ *         description: "Ошибка при добавлении часового пояса"
+ */
+
+/**
+ * @swagger
+ * /candidate/timezone:
+ *   get:
+ *     summary: "Получить часовые пояса кандидата"
+ *     tags: [Candidate]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: "Список часовых поясов"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/TimezoneResponse'
+ *       401:
+ *         description: "Не авторизован"
+ *       500:
+ *         description: "Ошибка при получении часовых поясов"
+ */
+
+/**
+ * @swagger
+ * /candidate/timezone:
+ *   delete:
+ *     summary: "Удалить часовой пояс кандидата"
+ *     tags: [Candidate]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/TimezoneRequest'
+ *     responses:
+ *       200:
+ *         description: "Часовой пояс удалён"
+ *       401:
+ *         description: "Не авторизован"
+ *       500:
+ *         description: "Ошибка при удалении часового пояса"
+ */
+
+/**
+ * @swagger
+ * /chat/upload:
+ *   post:
+ *     summary: "Загрузить файл для чата"
+ *     tags: [Chat]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *               chatId:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: "Файл загружен"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/FileUploadResponse'
+ *       400:
+ *         description: "Неверный тип файла"
+ *       401:
+ *         description: "Не авторизован"
+ *       403:
+ *         description: "Доступ запрещен"
+ *       500:
+ *         description: "Ошибка при загрузке файла"
+ */

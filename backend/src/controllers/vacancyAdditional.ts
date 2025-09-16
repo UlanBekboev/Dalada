@@ -145,218 +145,161 @@ export const updateResponseStatus = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// export const startChat = async (req: AuthRequest, res: Response) => {
-//   try {
-//     const { candidateId, templateText } = req.body;
-//     const userId = req.user?.userId;
 
-//     if (!userId) return res.status(401).json({ error: "Unauthorized" });
+/**
+ * @swagger
+ * tags:
+ *   - name: Responses
+ *     description: "Управление откликами на вакансии"
+ *
+ * components:
+ *   schemas:
+ *     RespondedVacancy:
+ *       type: object
+ *       properties:
+ *         responseId:
+ *           type: string
+ *         status:
+ *           type: string
+ *         respondedAt:
+ *           type: string
+ *           format: date-time
+ *         vacancy:
+ *           type: object
+ *           properties:
+ *             id:
+ *               type: string
+ *             title:
+ *               type: string
+ *             city:
+ *               type: string
+ *             salaryFrom:
+ *               type: number
+ *             salaryTo:
+ *               type: number
+ *             currency:
+ *               type: string
+ *             employer:
+ *               type: object
+ *               properties:
+ *                 companyName:
+ *                   type: string
+ *                 logoUrl:
+ *                   type: string
+ *     ResponseStatusUpdate:
+ *       type: object
+ *       required:
+ *         - status
+ *       properties:
+ *         status:
+ *           type: string
+ *     ErrorResponse:
+ *       type: object
+ *       properties:
+ *         error:
+ *           type: string
+ *         details:
+ *           type: string
+ *
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ */
 
-//     // Проверим роли
-//     const employer = await prisma.employerProfile.findUnique({
-//       where: { userId },
-//     });
-//     if (!employer) return res.status(403).json({ error: "Only employer can start chat" });
+/**
+ * @swagger
+ * /responses/my:
+ *   get:
+ *     summary: "Получить список вакансий, на которые откликнулся текущий пользователь"
+ *     tags: [Responses]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: "Список откликов пользователя"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/RespondedVacancy'
+ *       401:
+ *         description: "Не авторизован"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: "Ошибка при получении откликов"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
 
-//     // Проверим, есть ли уже чат
-//     const existingChat = await prisma.chat.findFirst({
-//       where: {
-//         participants: {
-//           some: { userId: candidateId },
-//         },
-//         AND: {
-//           participants: {
-//             some: { userId },
-//           },
-//         },
-//       },
-//     });
-
-//     if (existingChat) return res.json({ chatId: existingChat.id });
-
-//     // Создаём чат
-//     const chat = await prisma.chat.create({
-//       data: {
-//         participants: {
-//           create: [
-//             { userId: candidateId, role: "CANDIDATE" },
-//             { userId, role: "EMPLOYER" },
-//           ],
-//         },
-//       },
-//     });
-
-//     // Первое сообщение (шаблон можно редактировать перед отправкой)
-//     await prisma.message.create({
-//       data: {
-//         chatId: chat.id,
-//         senderId: userId,
-//         text: templateText || "Здравствуйте, хочу обсудить сотрудничество!",
-//       },
-//     });
-
-//     res.json({ chatId: chat.id });
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ error: "Failed to start chat" });
-//   }
-// };
-
-// export const getMyChats = async (req: AuthRequest, res: Response) => {
-//   try {
-//     const userId = req.user?.userId;
-//     if (!userId) return res.status(401).json({ error: "Unauthorized" });
-
-//     const chats = await prisma.chat.findMany({
-//       where: {
-//         participants: { some: { userId } },
-//       },
-//       include: {
-//         participants: {
-//           include: { user: { select: { id: true, name: true, role: true } } },
-//         },
-//         messages: {
-//           take: 1,
-//           orderBy: { createdAt: "desc" }, // последнее сообщение
-//         },
-//       },
-//       orderBy: { updatedAt: "desc" },
-//     });
-
-//     res.json(chats);
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ error: "Failed to fetch chats" });
-//   }
-// };
-
-// export const getChatMessages = async (req: AuthRequest, res: Response) => {
-//   try {
-//     const { id } = req.params;
-//     const userId = req.user?.userId;
-//     if (!userId) return res.status(401).json({ error: "Unauthorized" });
-
-//     // Проверка доступа
-//     const participant = await prisma.chatParticipant.findFirst({
-//       where: { chatId: id, userId },
-//     });
-//     if (!participant) return res.status(403).json({ error: "Access denied" });
-
-//     const messages = await prisma.message.findMany({
-//       where: { chatId: id },
-//       include: {
-//         sender: { select: { id: true, name: true, role: true } },
-//       },
-//       orderBy: { createdAt: "asc" },
-//     });
-
-//     res.json(messages);
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ error: "Failed to fetch messages" });
-//   }
-// };
-
-// export const sendMessage = async (req: AuthRequest, res: Response) => {
-//   try {
-//     const { id } = req.params; // chatId
-//     const { text, fileUrl } = req.body;
-//     const userId = req.user?.userId;
-
-//     if (!id) {
-//       return res.status(400).json({ error: "Chat ID is required" });
-//     }
-//     if (!userId) return res.status(401).json({ error: "Unauthorized" });
-
-//     // Проверка, что участник чата
-//     const participant = await prisma.chatParticipant.findFirst({
-//       where: { chatId: id, userId },
-//     });
-//     if (!participant) return res.status(403).json({ error: "Access denied" });
-
-//     const message = await prisma.message.create({
-//       data: {
-//         chatId: id,
-//         senderId: userId,
-//         text,
-//         fileUrl,
-//       },
-//     });
-
-//     // обновляем updatedAt чата
-//     await prisma.chat.update({
-//       where: { id },
-//       data: { updatedAt: new Date() },
-//     });
-
-//     res.json(message);
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ error: "Failed to send message" });
-//   }
-// };
-// export const getVacancyCandidates = async (req: AuthRequest, res: Response) => {
-//   try {
-//     const { id } = req.params; // vacancyId
-//     const userId = req.user?.userId;
-
-//     if (!userId) {
-//       return res.status(401).json({ error: "Unauthorized" });
-//     }
-
-//     // проверим, что текущий пользователь — работодатель этой вакансии
-//     const vacancy = await prisma.vacancy.findUnique({
-//       where: { id },
-//       include: { employer: true },
-//     });
-
-//     if (!vacancy) {
-//       return res.status(404).json({ error: "Вакансия не найдена" });
-//     }
-
-//     const employer = await prisma.employerProfile.findUnique({
-//       where: { userId },
-//     });
-
-//     if (!employer || vacancy.employerId !== employer.id) {
-//       return res.status(403).json({ error: "Доступ запрещен: не ваша вакансия" });
-//     }
-
-//     // тянем отклики + профили кандидатов
-//     const responses = await prisma.response.findMany({
-//       where: { vacancyId: id },
-//       include: {
-//         user: {
-//           include: {
-//             candidateProfile: true, // профиль кандидата
-//           },
-//         },
-//       },
-//     });
-
-//     // маппим под удобный формат
-//     const candidates = responses.map((r) => ({
-//       responseId: r.id,
-//       status: r.status,
-//       coverLetter: r.coverLetter,
-//       resumeUrls: r.resumeUrls,
-//       respondedAt: r.createdAt,
-//       candidate: r.user.candidateProfile
-//         ? {
-//             id: r.user.candidateProfile.id,
-//             fullName: r.user.candidateProfile.fullName,
-//             city: r.user.candidateProfile.city,
-//             country: r.user.candidateProfile.country,
-//             experience: r.user.candidateProfile.experience,
-//             skills: r.user.candidateProfile.skills,
-//             photoUrl: r.user.candidateProfile.photoUrl,
-//           }
-//         : null,
-//     }));
-
-//     res.json(candidates);
-//   } catch (err: any) {
-//     console.error(err);
-//     res.status(500).json({ error: "Ошибка при получении кандидатов", details: err.message });
-//   }
-// };
+/**
+ * @swagger
+ * /responses/{id}:
+ *   patch:
+ *     summary: "Обновить статус отклика (только владелец вакансии)"
+ *     tags: [Responses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "ID отклика"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/ResponseStatusUpdate'
+ *     responses:
+ *       200:
+ *         description: "Статус отклика обновлен"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 updated:
+ *                   type: object
+ *       400:
+ *         description: "Неверный запрос"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: "Не авторизован"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: "Доступ запрещен"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: "Отклик не найден"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: "Ошибка при обновлении статуса отклика"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */

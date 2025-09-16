@@ -60,3 +60,152 @@ export const oauthCallback = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Ошибка сервера" });
   }
 };
+
+/**
+ * @swagger
+ * tags:
+ *   name: Auth
+ *   description: Аутентификация пользователей
+ */
+
+/**
+ * @swagger
+ * /auth/send-otp:
+ *   post:
+ *     summary: Отправка OTP на email или телефон
+ *     tags: [Auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - role
+ *               - intent
+ *               - channel
+ *               - identifier
+ *             properties:
+ *               role:
+ *                 type: string
+ *                 enum: [CANDIDATE, EMPLOYER]
+ *                 example: CANDIDATE
+ *               intent:
+ *                 type: string
+ *                 enum: [LOGIN, REGISTER]
+ *                 example: REGISTER
+ *               channel:
+ *                 type: string
+ *                 enum: [EMAIL, PHONE]
+ *                 example: EMAIL
+ *               identifier:
+ *                 type: string
+ *                 example: user@example.com
+ *     responses:
+ *       200:
+ *         description: OTP успешно отправлено
+ *       400:
+ *         description: Ошибка валидации входных данных
+ *       500:
+ *         description: Ошибка сервера
+ */
+
+/**
+ * @swagger
+ * /auth/verify-otp:
+ *   post:
+ *     summary: Проверка OTP
+ *     tags: [Auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - identifier
+ *               - code
+ *               - intent
+ *               - role
+ *             properties:
+ *               identifier:
+ *                 type: string
+ *                 example: user@example.com
+ *               code:
+ *                 type: string
+ *                 example: "123456"
+ *               intent:
+ *                 type: string
+ *                 enum: [LOGIN, REGISTER]
+ *                 example: LOGIN
+ *               role:
+ *                 type: string
+ *                 enum: [CANDIDATE, EMPLOYER]
+ *                 example: CANDIDATE
+ *     responses:
+ *       200:
+ *         description: OTP подтвержден
+ *       400:
+ *         description: Ошибка валидации
+ *       401:
+ *         description: Неверный код OTP
+ *       500:
+ *         description: Ошибка сервера
+ */
+
+/**
+ * @swagger
+ * /auth/oauth/callback:
+ *   get:
+ *     summary: Callback для OAuth (Google/Facebook)
+ *     tags: [Auth]
+ *     security: []
+ *     parameters:
+ *       - in: query
+ *         name: role
+ *         schema:
+ *           type: string
+ *           enum: [CANDIDATE, EMPLOYER]
+ *         required: false
+ *         description: Роль пользователя (только для регистрации)
+ *       - in: query
+ *         name: intent
+ *         schema:
+ *           type: string
+ *           enum: [LOGIN, REGISTER]
+ *         required: true
+ *         description: Намерение (вход или регистрация)
+ *     responses:
+ *       200:
+ *         description: Успешная авторизация через OAuth
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *                 accessToken:
+ *                   type: string
+ *                 refreshToken:
+ *                   type: string
+ *       400:
+ *         description: Ошибка аутентификации
+ *       404:
+ *         description: Пользователь не найден
+ *       409:
+ *         description: Пользователь уже существует
+ *       500:
+ *         description: Ошибка сервера
+ */

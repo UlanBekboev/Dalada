@@ -89,7 +89,26 @@ model CandidateProfile {
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
 
+  timezone     String // обязательный
+  anytime      Boolean                 @default(false)
+  availability CandidateAvailability[]
+
   user User @relation(fields: [userId], references: [id])
+}
+
+model CandidateAvailability {
+  id          String           @id @default(uuid())
+  candidateId String
+  candidate   CandidateProfile @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  dayOfWeek Int
+  start     String // HH:MM
+  end       String // HH:MM
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([candidateId])
 }
 
 model CandidateLanguage {

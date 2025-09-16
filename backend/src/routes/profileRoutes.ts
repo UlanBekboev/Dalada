@@ -5,7 +5,8 @@ import {
   updateCandidateProfile,
   deleteCandidateProfile,
   getCandidateProfile,
-  
+  upsertCandidateLanguage,
+  deleteCandidateLanguage,
 } from '../controllers/candidateProfileController.js';
 import {
   createEmployerProfile,
@@ -16,14 +17,16 @@ import {
 
 const router = Router();
 
-router.post('/candidate', authMiddleware, createCandidateProfile);
-router.get('/candidate', authMiddleware, getCandidateProfile);
-router.put('/candidate', authMiddleware, updateCandidateProfile);
-router.delete('/candidate', authMiddleware, deleteCandidateProfile);
+router.post('/candidate/profile', authMiddleware, createCandidateProfile);
+router.get('/candidate/profile', authMiddleware, getCandidateProfile);
+router.put('/candidate/profile', authMiddleware, updateCandidateProfile);
+router.delete('/candidate/profile', authMiddleware, deleteCandidateProfile);
+router.patch('/candidate/languages', authMiddleware, upsertCandidateLanguage);
+router.delete('/candidate/languages/:language', authMiddleware, deleteCandidateLanguage);
 
-router.post('/employer', authMiddleware, createEmployerProfile);
-router.put('/employer', authMiddleware, updateEmployerProfile);
-router.get('/employer', authMiddleware, getEmployerProfile);
-router.delete('/employer', authMiddleware, deleteEmployerProfile);
+router.post('/employer/profile', authMiddleware, createEmployerProfile);
+router.put('/employer/profile', authMiddleware, updateEmployerProfile);
+router.get('/employer/profile', authMiddleware, getEmployerProfile);
+router.delete('/employer/profile', authMiddleware, deleteEmployerProfile);
 
 export default router;

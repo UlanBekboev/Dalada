@@ -393,243 +393,400 @@ export const getCandidateProfileById = async (req: AuthRequest, res: Response) =
   }
 };
 
-// PATCH /api/vacancies/:vacancyId/candidates/:candidateId/favorite
-// export const toggleFavorite = async (req: AuthRequest, res: Response) => {
-//   try {
-//     const { vacancyId, candidateId } = req.params;
-//     const employerId = req.user?.userId;
 
-//     if (!employerId) {
-//       return res.status(401).json({ error: "Unauthorized" });
-//     }
+/**
+ * @swagger
+ * tags:
+ *   - name: EmployerProfile
+ *     description: "Управление профилем работодателя и операции с кандидатами"
+ *
+ * components:
+ *   schemas:
+ *     EmployerProfileInput:
+ *       type: object
+ *       required:
+ *         - companyName
+ *       properties:
+ *         companyName:
+ *           type: string
+ *           example: "Acme Ltd."
+ *         industry:
+ *           type: string
+ *           example: "IT"
+ *         contactName:
+ *           type: string
+ *           example: "Иван Иванов"
+ *         phone:
+ *           type: string
+ *           example: "+996700000000"
+ *         email:
+ *           type: string
+ *           example: "hr@acme.com"
+ *         description:
+ *           type: string
+ *         legalInfo:
+ *           type: string
+ *         logoUrl:
+ *           type: string
+ *
+ *     EmployerProfileResponse:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         userId:
+ *           type: string
+ *         companyName:
+ *           type: string
+ *         industry:
+ *           type: string
+ *         contactName:
+ *           type: string
+ *         phone:
+ *           type: string
+ *         email:
+ *           type: string
+ *         description:
+ *           type: string
+ *         legalInfo:
+ *           type: string
+ *         logoUrl:
+ *           type: string
+ *
+ *     VacancyCandidateSummary:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         fullName:
+ *           type: string
+ *         desiredRole:
+ *           type: string
+ *         city:
+ *           type: string
+ *         skills:
+ *           type: array
+ *           items:
+ *             type: string
+ *         userId:
+ *           type: string
+ *         photoUrl:
+ *           type: string
+ *         experience:
+ *           type: string
+ *
+ *     CandidateListResponse:
+ *       type: object
+ *       properties:
+ *         page:
+ *           type: integer
+ *         limit:
+ *           type: integer
+ *         totalCount:
+ *           type: integer
+ *         totalPages:
+ *           type: integer
+ *         hasMore:
+ *           type: boolean
+ *         candidates:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/VacancyCandidateSummary'
+ *
+ *     CandidateActionInput:
+ *       type: object
+ *       required:
+ *         - action
+ *       properties:
+ *         action:
+ *           type: string
+ *           description: "Действие: INVITE | REJECT | FAVORITE"
+ *           example: "INVITE"
+ *
+ *     ActionResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *         status:
+ *           type: string
+ *
+ *     ErrorResponse:
+ *       type: object
+ *       properties:
+ *         error:
+ *           type: string
+ *
+ */
 
-//     if (!vacancyId) {
-//       return res.status(400).json({ error: "Vacancy ID is required" });
-//     }
+/**
+ * @swagger
+ * /employer/profile:
+ *   post:
+ *     summary: "Создать профиль работодателя"
+ *     tags: [EmployerProfile]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/EmployerProfileInput'
+ *     responses:
+ *       201:
+ *         description: "Профиль работодателя создан"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 profile:
+ *                   $ref: '#/components/schemas/EmployerProfileResponse'
+ *       400:
+ *         description: "Профиль уже существует или неверные данные"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: "Unauthorized"
+ *       500:
+ *         description: "Ошибка сервера"
+ *
+ *   get:
+ *     summary: "Получить профиль работодателя текущего пользователя"
+ *     tags: [EmployerProfile]
+ *     responses:
+ *       200:
+ *         description: "Профиль работодателя"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 profile:
+ *                   $ref: '#/components/schemas/EmployerProfileResponse'
+ *       401:
+ *         description: "Unauthorized"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: "Профиль работодателя не найден"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *
+ *   put:
+ *     summary: "Обновить профиль работодателя (только владелец)"
+ *     tags: [EmployerProfile]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/EmployerProfileInput'
+ *     responses:
+ *       200:
+ *         description: "Профиль работодателя обновлён"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 profile:
+ *                   $ref: '#/components/schemas/EmployerProfileResponse'
+ *       401:
+ *         description: "Unauthorized"
+ *       404:
+ *         description: "Профиль не найден"
+ *       500:
+ *         description: "Ошибка сервера"
+ *
+ *   delete:
+ *     summary: "Удалить профиль работодателя"
+ *     tags: [EmployerProfile]
+ *     responses:
+ *       200:
+ *         description: "Профиль работодателя удалён"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *       401:
+ *         description: "Unauthorized"
+ *       404:
+ *         description: "Профиль не найден"
+ *       500:
+ *         description: "Ошибка сервера"
+ */
 
-//     if (!candidateId) {
-//       return res.status(400).json({ error: "Candidate ID is required" });
-//     }
+/**
+ * @swagger
+ * /vacancy/{id}/candidates:
+ *   get:
+ *     summary: "Получить список подходящих кандидатов для вакансии (владелец вакансии)"
+ *     tags: [EmployerProfile]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "ID вакансии"
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *         description: "Номер страницы"
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *         description: "Лимит на страницу (max 50)"
+ *     responses:
+ *       200:
+ *         description: "Список кандидатов с пагинацией"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/CandidateListResponse'
+ *       401:
+ *         description: "Unauthorized"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       403:
+ *         description: "Not your vacancy"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: "Vacancy not found"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       500:
+ *         description: "Ошибка сервера"
+ */
 
-//     // Проверяем, что вакансия принадлежит текущему работодателю
-//     const vacancy = await prisma.vacancy.findUnique({
-//       where: { id: vacancyId },
-//       select: { employerId: true },
-//     });
+/**
+ * @swagger
+ * /vacancy/{id}/candidates/{candidateId}/action:
+ *   post:
+ *     summary: "Применить действие к кандидату на вакансии (INVITE | REJECT | FAVORITE)"
+ *     tags: [EmployerProfile]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "ID вакансии"
+ *       - in: path
+ *         name: candidateId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "ID пользователя-кандидата (userId)"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CandidateActionInput'
+ *     responses:
+ *       200:
+ *         description: "Действие применено"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ActionResponse'
+ *       400:
+ *         description: "Missing parameters / Unknown action"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         description: "Unauthorized"
+ *       403:
+ *         description: "Not your vacancy"
+ *       404:
+ *         description: "Vacancy or candidate not found"
+ *       500:
+ *         description: "Ошибка сервера"
+ */
 
-//     if (!vacancy) {
-//       return res.status(404).json({ error: "Vacancy not found" });
-//     }
-
-//     const employerProfile = await prisma.employerProfile.findUnique({
-//       where: { userId: employerId },
-//     });
-
-//     if (!employerProfile || vacancy.employerId !== employerProfile.id) {
-//       return res.status(403).json({ error: "Access denied: not your vacancy" });
-//     }
-
-//     // Находим или создаем отклик от кандидата
-//     let response = await prisma.response.findFirst({
-//       where: { vacancyId, userId: candidateId },
-//     });
-
-//     if (!response) {
-//       response = await prisma.response.create({
-//         data: {
-//           vacancyId,
-//           userId: candidateId,
-//           status: "FAVORITE", // сразу ставим избранное
-//         },
-//       });
-//       return res.json({ message: "Added to favorites", status: "FAVORITE" });
-//     }
-
-//     // Переключаем статус
-//     const newStatus =
-//       response.status === "FAVORITE" ? "IN_PROGRESS" : "FAVORITE";
-
-//     await prisma.response.update({
-//       where: { id: response.id },
-//       data: { status: newStatus },
-//     });
-
-//     res.json({
-//       message:
-//         newStatus === "FAVORITE"
-//           ? "Added to favorites"
-//           : "Removed from favorites",
-//       status: newStatus,
-//     });
-//   } catch (err) {
-//     console.error("Error in toggleFavorite:", err);
-//     res.status(500).json({ error: "Failed to toggle favorite" });
-//   }
-// };
-
-// export const getFavoriteCandidates = async (req: AuthRequest, res: Response) => {
-//   try {
-//     const { vacancyId } = req.params;
-//     const employerUserId = req.user?.userId;
-//     const page = parseInt(req.query.page as string) || 1;
-//     const limit = parseInt(req.query.limit as string) || 10;
-
-//     if (!employerUserId) {
-//       return res.status(401).json({ error: "Unauthorized" });
-//     }
-
-//     // Проверяем, что вакансия существует и принадлежит этому работодателю
-//     const vacancy = await prisma.vacancy.findUnique({
-//       where: { id: vacancyId },
-//       include: { employer: true },
-//     });
-
-//     if (!vacancy) {
-//       return res.status(404).json({ error: "Vacancy not found" });
-//     }
-
-//     if (vacancy.employer.userId !== employerUserId) {
-//       return res.status(403).json({ error: "Access denied" });
-//     }
-
-//     // Получаем избранных кандидатов
-//     const [favoriteResponses, totalCount] = await Promise.all([
-//       prisma.response.findMany({
-//         where: {
-//           vacancyId,
-//           status: "FAVORITE", // используем именно FAVORITE
-//         },
-//         include: {
-//           user: {
-//             include: {
-//               candidateProfile: {
-//                 include: {
-//                   languages: true,
-//                 },
-//               },
-//             },
-//           },
-//         },
-//         skip: (page - 1) * limit,
-//         take: limit,
-//         orderBy: { createdAt: "desc" },
-//       }),
-//       prisma.response.count({
-//         where: {
-//           vacancyId,
-//           status: "FAVORITE",
-//         },
-//       }),
-//     ]);
-
-//     // Формируем ответ
-//     const favorites = favoriteResponses
-//       .map((response) => {
-//         const profile = response.user.candidateProfile;
-//         if (!profile) return null;
-
-//         return {
-//           id: profile.id,
-//           userId: response.userId,
-//           fullName: profile.fullName,
-//           desiredRole: profile.desiredRole,
-//           city: profile.city,
-//           skills: profile.skills,
-//           photoUrl: profile.photoUrl,
-//           responseId: response.id,
-//           responseStatus: response.status,
-//           respondedAt: response.createdAt,
-//         };
-//       })
-//       .filter((p) => p !== null);
-
-//     res.json({
-//       favorites,
-//       pagination: {
-//         page,
-//         limit,
-//         totalCount,
-//         totalPages: Math.ceil(totalCount / limit),
-//       },
-//     });
-//   } catch (err) {
-//     console.error("Error in getFavoriteCandidates:", err);
-//     res.status(500).json({ error: "Failed to fetch favorite candidates" });
-//   }
-// };
-
-// export const searchCandidates = async (req: AuthRequest, res: Response) => {
-//   try {
-//     const userId = req.user?.userId;
-//     const { skills, city, page = 1, limit = 10 } = req.query;
-    
-//     if (!userId) return res.status(401).json({ error: "Unauthorized" });
-
-//     const pageNum = parseInt(page as string) || 1;
-//     const limitNum = parseInt(limit as string) || 10;
-//     const skip = (pageNum - 1) * limitNum;
-
-//     // Формируем условия фильтрации
-//     const whereConditions: any = {};
-
-//     // Фильтр по городу
-//     if (city) {
-//       whereConditions.city = {
-//         contains: city as string,
-//         mode: 'insensitive'
-//       };
-//     }
-
-//     // Фильтр по навыкам
-//     if (skills) {
-//       const skillsArray = (skills as string).split(',');
-//       whereConditions.skills = {
-//         hasSome: skillsArray
-//       };
-//     }
-
-//     const [candidates, totalCount] = await Promise.all([
-//       // Получаем кандидатов
-//       prisma.candidateProfile.findMany({
-//         where: whereConditions,
-//         select: {
-//           id: true,
-//           fullName: true,
-//           desiredRole: true,
-//           city: true,
-//           skills: true,
-//           experience: true,
-//           photoUrl: true,
-//           userId: true,
-//           languages: true,
-//           user: {
-//             select: {
-//               email: true,
-//               phone: true
-//             }
-//           }
-//         },
-//         skip,
-//         take: limitNum,
-//         orderBy: { createdAt: 'desc' }
-//       }),
-//       // Получаем общее количество
-//       prisma.candidateProfile.count({
-//         where: whereConditions
-//       })
-//     ]);
-
-//     res.json({
-//       candidates,
-//       pagination: {
-//         page: pageNum,
-//         limit: limitNum,
-//         totalCount,
-//         totalPages: Math.ceil(totalCount / limitNum)
-//       }
-//     });
-//   } catch (err) {
-//     console.error("Error in searchCandidates:", err);
-//     res.status(500).json({ error: "Failed to search candidates" });
-//   }
-// };
+/**
+ * @swagger
+ * /candidate/{id}:
+ *   get:
+ *     summary: "Получить профиль кандидата по userId (публичный/для работодателя)"
+ *     tags: [EmployerProfile]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "userId кандидата"
+ *     responses:
+ *       200:
+ *         description: "Профиль кандидата"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                 fullName:
+ *                   type: string
+ *                 desiredRole:
+ *                   type: string
+ *                 city:
+ *                   type: string
+ *                 skills:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                 experience:
+ *                   type: string
+ *                 photoUrl:
+ *                   type: string
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     email:
+ *                       type: string
+ *                     phone:
+ *                       type: string
+ *       404:
+ *         description: "Candidate not found"
+ *       500:
+ *         description: "Ошибка сервера"
+ */

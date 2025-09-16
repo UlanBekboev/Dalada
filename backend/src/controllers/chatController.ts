@@ -393,3 +393,382 @@ export const markMessagesAsReadController = async (req: AuthRequest, res: Respon
     res.status(500).json({ error: "Failed to mark messages as read" });
   }
 };
+
+
+/**
+ * @swagger
+ * tags:
+ *   - name: Chats
+ *     description: "Управление чатами и сообщениями"
+ *
+ * components:
+ *   schemas:
+ *     StartChatRequest:
+ *       type: object
+ *       required:
+ *         - candidateId
+ *       properties:
+ *         candidateId:
+ *           type: string
+ *           description: "ID кандидата для начала чата"
+ *         templateText:
+ *           type: string
+ *           description: "Текст шаблонного сообщения"
+ *     ChatResponse:
+ *       type: object
+ *       properties:
+ *         chatId:
+ *           type: string
+ *     MessageRequest:
+ *       type: object
+ *       properties:
+ *         text:
+ *           type: string
+ *         fileUrl:
+ *           type: string
+ *         fileName:
+ *           type: string
+ *         fileType:
+ *           type: string
+ *         fileSize:
+ *           type: number
+ *     Message:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         chatId:
+ *           type: string
+ *         senderId:
+ *           type: string
+ *         text:
+ *           type: string
+ *         fileUrl:
+ *           type: string
+ *         fileName:
+ *           type: string
+ *         fileType:
+ *           type: string
+ *         fileSize:
+ *           type: number
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         sender:
+ *           type: object
+ *           properties:
+ *             id:
+ *               type: string
+ *             name:
+ *               type: string
+ *             role:
+ *               type: string
+ *         ReadReceipt:
+ *           type: array
+ *           items:
+ *             type: object
+ *     PaginatedMessages:
+ *       type: object
+ *       properties:
+ *         messages:
+ *           type: array
+ *           items:
+ *             $ref: '#/components/schemas/Message'
+ *         pagination:
+ *           type: object
+ *           properties:
+ *             page:
+ *               type: number
+ *             limit:
+ *               type: number
+ *             totalCount:
+ *               type: number
+ *             totalPages:
+ *               type: number
+ *     ChatInfo:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         participants:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               user:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                   name:
+ *                     type: string
+ *                   role:
+ *                     type: string
+ *                   candidateProfile:
+ *                     type: object
+ *                     properties:
+ *                       photoUrl:
+ *                         type: string
+ *                       desiredRole:
+ *                         type: string
+ *                   employerProfile:
+ *                     type: object
+ *                     properties:
+ *                       companyName:
+ *                         type: string
+ *                       logoUrl:
+ *                         type: string
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
+ *     MarkAsReadResponse:
+ *       type: object
+ *       properties:
+ *         success:
+ *           type: boolean
+ *         updated:
+ *           type: number
+ *     ErrorResponse:
+ *       type: object
+ *       properties:
+ *         error:
+ *           type: string
+ *         details:
+ *           type: string
+ *
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ */
+
+/**
+ * @swagger
+ * /chats/start:
+ *   post:
+ *     summary: "Начать чат с кандидатом (только работодатель)"
+ *     tags: [Chats]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/StartChatRequest'
+ *     responses:
+ *       200:
+ *         description: "Чат создан или найден существующий"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ChatResponse'
+ *       401:
+ *         description: "Не авторизован"
+ *       403:
+ *         description: "Только работодатели могут начинать чаты"
+ *       404:
+ *         description: "Кандидат не найден"
+ *       500:
+ *         description: "Ошибка при создании чата"
+ */
+
+/**
+ * @swagger
+ * /chats/{id}/messages:
+ *   get:
+ *     summary: "Получить сообщения чата"
+ *     tags: [Chats]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "ID чата"
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: "Номер страницы"
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 50
+ *         description: "Количество сообщений на странице"
+ *     responses:
+ *       200:
+ *         description: "Сообщения чата"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PaginatedMessages'
+ *       401:
+ *         description: "Не авторизован"
+ *       403:
+ *         description: "Доступ запрещен"
+ *       500:
+ *         description: "Ошибка при получении сообщений"
+ */
+
+/**
+ * @swagger
+ * /chats/{id}/messages:
+ *   post:
+ *     summary: "Отправить сообщение в чат"
+ *     tags: [Chats]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "ID чата"
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/MessageRequest'
+ *     responses:
+ *       200:
+ *         description: "Сообщение отправлено"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Message'
+ *       400:
+ *         description: "Неверный запрос"
+ *       401:
+ *         description: "Не авторизован"
+ *       403:
+ *         description: "Доступ запрещен"
+ *       404:
+ *         description: "Чат не найден"
+ *       500:
+ *         description: "Ошибка при отправке сообщения"
+ */
+
+/**
+ * @swagger
+ * /chats/{id}:
+ *   get:
+ *     summary: "Получить информацию о чате"
+ *     tags: [Chats]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "ID чата"
+ *     responses:
+ *       200:
+ *         description: "Информация о чате"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ChatInfo'
+ *       401:
+ *         description: "Не авторизован"
+ *       403:
+ *         description: "Доступ запрещен"
+ *       404:
+ *         description: "Чат не найден"
+ *       500:
+ *         description: "Ошибка при получении информации о чате"
+ */
+
+/**
+ * @swagger
+ * /chats:
+ *   get:
+ *     summary: "Получить список чатов пользователя"
+ *     tags: [Chats]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: "Список чатов пользователя"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/ChatInfo'
+ *       401:
+ *         description: "Не авторизован"
+ *       500:
+ *         description: "Ошибка при получении списка чатов"
+ */
+
+/**
+ * @swagger
+ * /chats/filtered:
+ *   get:
+ *     summary: "Получить отфильтрованный список чатов"
+ *     tags: [Chats]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: onlyRead
+ *         schema:
+ *           type: boolean
+ *         description: "Фильтровать только прочитанные чаты"
+ *     responses:
+ *       200:
+ *         description: "Отфильтрованный список чатов"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/ChatInfo'
+ *       401:
+ *         description: "Не авторизован"
+ *       500:
+ *         description: "Ошибка при получении списка чатов"
+ */
+
+/**
+ * @swagger
+ * /chats/{id}/read:
+ *   post:
+ *     summary: "Отметить сообщения как прочитанные"
+ *     tags: [Chats]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "ID чата"
+ *     responses:
+ *       200:
+ *         description: "Сообщения отмечены как прочитанные"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/MarkAsReadResponse'
+ *       400:
+ *         description: "Неверный запрос"
+ *       401:
+ *         description: "Не авторизован"
+ *       500:
+ *         description: "Ошибка при отметке сообщений"
+ */

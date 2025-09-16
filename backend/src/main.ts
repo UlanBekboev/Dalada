@@ -13,6 +13,9 @@ import { createServer } from 'http';
 import { initSocketIO } from './sockets/socketHandler.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import openApiDoc from '../openapi.json' with { type: 'json' };
+import swaggerUi from "swagger-ui-express";
+
 
 dotenv.config();
 
@@ -39,18 +42,22 @@ app.use('/uploads/candidate-photos', express.static(path.join(__dirname, 'upload
 app.use('/uploads/chat-files', express.static(path.join(__dirname, 'uploads/chat-files')));
 app.use('/uploads/resumes', express.static(path.join(__dirname, 'uploads/resumes')));
 
-app.use("/auth", authRoutes);
-app.use("/profile", profileRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api", profileRoutes);
 app.use("/api", uploadFileRoutes);
-app.use("/vacancy", vacancyRoutes);
+app.use("/api", vacancyRoutes);
 app.use("/api/chats", chatRoutes);
-app.use("/vacancy", favorites)
+app.use("/api", favorites)
 app.get("/api", (req: Request, res: Response) => {
     res.send("Dalada работает!");
 });
+
+// Swagger UI доступен по /api-docs
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiDoc));
 
 const PORT = process.env.PORT || 5000;
 
 app.listen(process.env.PORT, () =>{
     console.log(`Сервер запущен на http://localhost:${PORT}`);
+    console.log("📑 Swagger docs: http://localhost:5000/api-docs");
 })

@@ -15,28 +15,25 @@ import { candidateAction, getCandidateProfileById, getCandidatesForVacancy } fro
 
 const router = Router();
 
-// Сначала определяем специфичные маршруты
-router.get('/my/responses', authMiddleware, getMyRespondedVacancies);
+// Responses Управление откликами на вакансии
+router.get('/responses/my', authMiddleware, getMyRespondedVacancies);
+router.patch('/responses/:id', authMiddleware, updateResponseStatus);
 
-// Затем определяем маршруты с параметрами
-router.get('/:id/responses', authMiddleware, getVacancyResponses);
-router.get('/:id', authMiddleware, getVacancyDescriptionById);
+// Vacancy Вакансии и отклики
+router.get('/vacancy/:id/responses', authMiddleware, getVacancyResponses);
+router.get('/vacancy/:id/description', authMiddleware, getVacancyDescriptionById);
 
 // Остальные маршруты
-router.post('/', authMiddleware, createVacancy);
-router.put('/:id', authMiddleware, updateVacancy);
-router.post('/:id/publish', authMiddleware, publishVacancy);
-router.get('/', authMiddleware, getVacancies); // Только один GET / маршрут
-router.delete('/:id', authMiddleware, deleteVacancy);
-router.post('/:id/respond', authMiddleware, respondToVacancy);
+router.post('/vacancy', authMiddleware, createVacancy);
+router.get('/vacancy', authMiddleware, getVacancies);
+router.put('/vacancy/:id', authMiddleware, updateVacancy);
+router.post('/vacancy/:id/publish', authMiddleware, publishVacancy);
+router.delete('/vacancy/:id', authMiddleware, deleteVacancy);
+router.post('/vacancy/:id/respond', authMiddleware, respondToVacancy);
 //router.post('/:responseId/resume', authMiddleware, sendResume);
-router.patch('/:id/status', authMiddleware, updateResponseStatus);
 
-// GET /vacancy/:id/candidates?page=1&limit=10
-router.get('/:id/candidates', authMiddleware, getCandidatesForVacancy);
-router.post('/:id/candidates/:candidateId/action', authMiddleware, candidateAction);
+router.get('/vacancy/:id/candidates', authMiddleware, getCandidatesForVacancy);
+router.post('/vacancy/:id/candidates/:candidateId/action', authMiddleware, candidateAction);
 router.get('/candidate/:id', authMiddleware, getCandidateProfileById);
-
-
 
 export default router;

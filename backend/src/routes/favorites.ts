@@ -4,9 +4,9 @@ import { authMiddleware } from "../middleware/authMiddleware.js";
 
 const router = Router();
 
-router.patch("/:vacancyId/vacancy", authMiddleware, toggleFavoriteVacancy); // toggle
-router.get("/my/favorites", authMiddleware, getMyFavoriteVacancies); // list
-router.patch("/:vacancyId/candidates/:candidateProfileId/favorite", authMiddleware, toggleFavoriteCandidate);
-router.get("/:vacancyId/favorites", authMiddleware, getFavoriteCandidates); 
+router.patch("/candidate/favorites/vacancy/:vacancyId", authMiddleware, toggleFavoriteVacancy); // toggle
+router.get("/candidate/favorites/vacancies", authMiddleware, getMyFavoriteVacancies); // list
+router.patch("/employer/favorites/:vacancyId//candidate/:candidateProfileId", authMiddleware, toggleFavoriteCandidate);
+router.get("/employer/favorites/:vacancyId//candidates", authMiddleware, getFavoriteCandidates); 
 
 export default router;

@@ -1,4 +1,3 @@
-// config/uploadConfig.ts
 import path from 'path';
 import { fileURLToPath } from 'url';
 

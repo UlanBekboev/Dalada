@@ -9,13 +9,13 @@ const router = Router();
  * OTP
  */
 router.post(
-  "/otp/send",
+  "/send-otp",
   validateRequest(["role", "intent", "channel", "identifier"]),
   sendOtp
 );
 
 router.post(
-  "/otp/verify",
+  "/verify-otp",
   validateRequest(["identifier", "code", "intent", "role"]),
   verifyOtp
 );
@@ -26,7 +26,7 @@ router.get(
 );
 
 router.get(
-  "/google/callback",
+  "/oauth/callback",
   passport.authenticate("google", { session: false }),
   oauthCallback
 );
@@ -37,7 +37,7 @@ router.get(
 );
 
 router.get(
-  "/facebook/callback",
+  "/oauth/callback",
   passport.authenticate("facebook", { session: false }),
   oauthCallback
 );

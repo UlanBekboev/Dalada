@@ -392,3 +392,294 @@ export const getFavoriteCandidates = async (req: AuthRequest, res: Response) => 
     res.status(500).json({ error: 'Failed to fetch favorite candidates' });
   }
 };
+
+
+/**
+ * @swagger
+ * tags:
+ *   - name: Favorites
+ *     description: "Управление избранными вакансиями и кандидатами"
+ *
+ * components:
+ *   schemas:
+ *     FavoriteToggleResponse:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *         favorited:
+ *           type: boolean
+ *         status:
+ *           type: string
+ *     FavoriteVacancy:
+ *       type: object
+ *       properties:
+ *         favoriteId:
+ *           type: string
+ *         vacancy:
+ *           type: object
+ *           properties:
+ *             id:
+ *               type: string
+ *             title:
+ *               type: string
+ *             city:
+ *               type: string
+ *             salaryFrom:
+ *               type: number
+ *             salaryTo:
+ *               type: number
+ *             currency:
+ *               type: string
+ *             employer:
+ *               type: object
+ *               properties:
+ *                 companyName:
+ *                   type: string
+ *                 logoUrl:
+ *                   type: string
+ *             status:
+ *               type: string
+ *             publishedAt:
+ *               type: string
+ *               format: date-time
+ *         favoritedAt:
+ *           type: string
+ *           format: date-time
+ *     FavoriteCandidate:
+ *       type: object
+ *       properties:
+ *         id:
+ *           type: string
+ *         userId:
+ *           type: string
+ *         fullName:
+ *           type: string
+ *         desiredRole:
+ *           type: string
+ *         city:
+ *           type: string
+ *         skills:
+ *           type: array
+ *           items:
+ *             type: string
+ *         photoUrl:
+ *           type: string
+ *         responseId:
+ *           type: string
+ *         responseStatus:
+ *           type: string
+ *         respondedAt:
+ *           type: string
+ *           format: date-time
+ *     PaginationInfo:
+ *       type: object
+ *       properties:
+ *         page:
+ *           type: number
+ *         limit:
+ *           type: number
+ *         totalCount:
+ *           type: number
+ *         totalPages:
+ *           type: number
+ *         hasNextPage:
+ *           type: boolean
+ *         hasPrevPage:
+ *           type: boolean
+ *     ErrorResponse:
+ *       type: object
+ *       properties:
+ *         error:
+ *           type: string
+ *         details:
+ *           type: string
+ *
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ */
+
+/**
+ * @swagger
+ * /candidate/favorites/vacancy/{vacancyId}:
+ *   post:
+ *     summary: "Добавить/удалить вакансию в избранное (только кандидат)"
+ *     tags: [Favorites]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: vacancyId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "ID вакансии"
+ *     responses:
+ *       200:
+ *         description: "Статус избранного обновлен"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/FavoriteToggleResponse'
+ *       400:
+ *         description: "Неверный запрос"
+ *       401:
+ *         description: "Не авторизован"
+ *       403:
+ *         description: "Только кандидаты могут добавлять вакансии в избранное"
+ *       404:
+ *         description: "Вакансия не найдена"
+ *       500:
+ *         description: "Внутренняя ошибка сервера"
+ */
+
+/**
+ * @swagger
+ * /candidate/favorites/vacancies:
+ *   get:
+ *     summary: "Получить список избранных вакансий (только кандидат)"
+ *     tags: [Favorites]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: "Номер страницы"
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 20
+ *         description: "Количество элементов на странице"
+ *     responses:
+ *       200:
+ *         description: "Список избранных вакансий"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 favorites:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/FavoriteVacancy'
+ *                 pagination:
+ *                   $ref: '#/components/schemas/PaginationInfo'
+ *       401:
+ *         description: "Не авторизован"
+ *       403:
+ *         description: "Только кандидаты могут просматривать избранные вакансии"
+ *       500:
+ *         description: "Ошибка при получении избранных вакансий"
+ */
+
+/**
+ * @swagger
+ * /employer/favorites/{vacancyId}/candidate/{candidateProfileId}:
+ *   patch:
+ *     summary: "Добавить/удалить кандидата в избранное (только работодатель)"
+ *     tags: [Favorites]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: vacancyId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "ID вакансии"
+ *       - in: path
+ *         name: candidateProfileId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "ID профиля кандидата"
+ *     responses:
+ *       200:
+ *         description: "Статус избранного обновлен"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/FavoriteToggleResponse'
+ *       400:
+ *         description: "Неверный запрос"
+ *       401:
+ *         description: "Не авторизован"
+ *       403:
+ *         description: "Доступ запрещен"
+ *       404:
+ *         description: "Вакансия или кандидат не найдены"
+ *       500:
+ *         description: "Ошибка при обновлении статуса избранного"
+ */
+
+/**
+ * @swagger
+ * /employer/favorites/{vacancyId}/candidates:
+ *   get:
+ *     summary: "Получить список избранных кандидатов для вакансии (только работодатель)"
+ *     tags: [Favorites]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: vacancyId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: "ID вакансии"
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: "Номер страницы"
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 10
+ *         description: "Количество элементов на странице"
+ *     responses:
+ *       200:
+ *         description: "Список избранных кандидатов"
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 favorites:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/FavoriteCandidate'
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: number
+ *                     limit:
+ *                       type: number
+ *                     totalCount:
+ *                       type: number
+ *                     totalPages:
+ *                       type: number
+ *       401:
+ *         description: "Не авторизован"
+ *       403:
+ *         description: "Доступ запрещен"
+ *       404:
+ *         description: "Вакансия не найдена"
+ *       500:
+ *         description: "Ошибка при получении избранных кандидатов"
+ */

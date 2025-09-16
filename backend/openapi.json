@@ -1,0 +1,3540 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Dalada API",
+    "version": "1.0.0",
+    "description": "Документация API для платформы Dalada"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000/api"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/auth/send-otp": {
+      "post": {
+        "summary": "Отправка OTP на email или телефон",
+        "tags": [
+          "Auth"
+        ],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "role",
+                  "intent",
+                  "channel",
+                  "identifier"
+                ],
+                "properties": {
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "CANDIDATE",
+                      "EMPLOYER"
+                    ],
+                    "example": "CANDIDATE"
+                  },
+                  "intent": {
+                    "type": "string",
+                    "enum": [
+                      "LOGIN",
+                      "REGISTER"
+                    ],
+                    "example": "REGISTER"
+                  },
+                  "channel": {
+                    "type": "string",
+                    "enum": [
+                      "EMAIL",
+                      "PHONE"
+                    ],
+                    "example": "EMAIL"
+                  },
+                  "identifier": {
+                    "type": "string",
+                    "example": "user@example.com"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OTP успешно отправлено"
+          },
+          "400": {
+            "description": "Ошибка валидации входных данных"
+          },
+          "500": {
+            "description": "Ошибка сервера"
+          }
+        }
+      }
+    },
+    "/auth/verify-otp": {
+      "post": {
+        "summary": "Проверка OTP",
+        "tags": [
+          "Auth"
+        ],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "identifier",
+                  "code",
+                  "intent",
+                  "role"
+                ],
+                "properties": {
+                  "identifier": {
+                    "type": "string",
+                    "example": "user@example.com"
+                  },
+                  "code": {
+                    "type": "string",
+                    "example": "123456"
+                  },
+                  "intent": {
+                    "type": "string",
+                    "enum": [
+                      "LOGIN",
+                      "REGISTER"
+                    ],
+                    "example": "LOGIN"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "CANDIDATE",
+                      "EMPLOYER"
+                    ],
+                    "example": "CANDIDATE"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OTP подтвержден"
+          },
+          "400": {
+            "description": "Ошибка валидации"
+          },
+          "401": {
+            "description": "Неверный код OTP"
+          },
+          "500": {
+            "description": "Ошибка сервера"
+          }
+        }
+      }
+    },
+    "/auth/oauth/callback": {
+      "get": {
+        "summary": "Callback для OAuth (Google/Facebook)",
+        "tags": [
+          "Auth"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "role",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "CANDIDATE",
+                "EMPLOYER"
+              ]
+            },
+            "required": false,
+            "description": "Роль пользователя (только для регистрации)"
+          },
+          {
+            "in": "query",
+            "name": "intent",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "LOGIN",
+                "REGISTER"
+              ]
+            },
+            "required": true,
+            "description": "Намерение (вход или регистрация)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Успешная авторизация через OAuth",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "email": {
+                          "type": "string"
+                        },
+                        "role": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "accessToken": {
+                      "type": "string"
+                    },
+                    "refreshToken": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка аутентификации"
+          },
+          "404": {
+            "description": "Пользователь не найден"
+          },
+          "409": {
+            "description": "Пользователь уже существует"
+          },
+          "500": {
+            "description": "Ошибка сервера"
+          }
+        }
+      }
+    },
+    "/candidate/profile": {
+      "post": {
+        "summary": "Создать профиль соискателя (обязательные поля: fullName, timezone)",
+        "tags": [
+          "CandidateProfile"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CandidateProfileInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Профиль создан",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "profile": {
+                      "$ref": "#/components/schemas/CandidateProfileResponse"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Профиль уже существует / Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибки валидации (timezone required, формат времени, лимиты, пересечения)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка сервера"
+          }
+        }
+      },
+      "put": {
+        "summary": "Обновить профиль соискателя (включая availability). Только владелец профиля может изменить.",
+        "tags": [
+          "CandidateProfile"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CandidateProfileInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Профиль обновлён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "profile": {
+                      "$ref": "#/components/schemas/CandidateProfileResponse"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden — попытка изменить чужой профиль",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Профиль не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Ошибка валидации (формат времени, пересечения, лимиты, timezone required)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка сервера"
+          }
+        }
+      },
+      "get": {
+        "summary": "Получить профиль текущего аутентифицированного соискателя (включая availability)",
+        "tags": [
+          "CandidateProfile"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Профиль найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandidateProfileResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Профиль не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Удалить профиль соискателя (включая languages и availability)",
+        "tags": [
+          "CandidateProfile"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Профиль удалён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "404": {
+            "description": "Профиль не найден"
+          },
+          "500": {
+            "description": "Ошибка сервера"
+          }
+        }
+      }
+    },
+    "/candidate/languages": {
+      "patch": {
+        "summary": "Добавить или обновить один язык (upsert)",
+        "tags": [
+          "CandidateProfile"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LanguageUpsertInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Язык сохранён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "item": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "language и level обязательны"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "404": {
+            "description": "Профиль не найден"
+          },
+          "500": {
+            "description": "Ошибка сервера"
+          }
+        }
+      }
+    },
+    "/candidate/languages/{language}": {
+      "delete": {
+        "summary": "Удалить один язык кандидата",
+        "tags": [
+          "CandidateProfile"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "language",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Название языка (пример: English)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Язык удалён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "language обязателен"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "404": {
+            "description": "Профиль или язык не найден"
+          },
+          "500": {
+            "description": "Ошибка сервера"
+          }
+        }
+      }
+    },
+    "/chats/start": {
+      "post": {
+        "summary": "Начать чат с кандидатом (только работодатель)",
+        "tags": [
+          "Chats"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartChatRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Чат создан или найден существующий",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Только работодатели могут начинать чаты"
+          },
+          "404": {
+            "description": "Кандидат не найден"
+          },
+          "500": {
+            "description": "Ошибка при создании чата"
+          }
+        }
+      }
+    },
+    "/chats/{id}/messages": {
+      "get": {
+        "summary": "Получить сообщения чата",
+        "tags": [
+          "Chats"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID чата"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "description": "Номер страницы"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            },
+            "description": "Количество сообщений на странице"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Сообщения чата",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedMessages"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Доступ запрещен"
+          },
+          "500": {
+            "description": "Ошибка при получении сообщений"
+          }
+        }
+      },
+      "post": {
+        "summary": "Отправить сообщение в чат",
+        "tags": [
+          "Chats"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID чата"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MessageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Сообщение отправлено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Message"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный запрос"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Доступ запрещен"
+          },
+          "404": {
+            "description": "Чат не найден"
+          },
+          "500": {
+            "description": "Ошибка при отправке сообщения"
+          }
+        }
+      }
+    },
+    "/chats/{id}": {
+      "get": {
+        "summary": "Получить информацию о чате",
+        "tags": [
+          "Chats"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID чата"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Информация о чате",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatInfo"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Доступ запрещен"
+          },
+          "404": {
+            "description": "Чат не найден"
+          },
+          "500": {
+            "description": "Ошибка при получении информации о чате"
+          }
+        }
+      }
+    },
+    "/chats": {
+      "get": {
+        "summary": "Получить список чатов пользователя",
+        "tags": [
+          "Chats"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Список чатов пользователя",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChatInfo"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "500": {
+            "description": "Ошибка при получении списка чатов"
+          }
+        }
+      }
+    },
+    "/chats/filtered": {
+      "get": {
+        "summary": "Получить отфильтрованный список чатов",
+        "tags": [
+          "Chats"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "onlyRead",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Фильтровать только прочитанные чаты"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Отфильтрованный список чатов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChatInfo"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "500": {
+            "description": "Ошибка при получении списка чатов"
+          }
+        }
+      }
+    },
+    "/chats/{id}/read": {
+      "post": {
+        "summary": "Отметить сообщения как прочитанные",
+        "tags": [
+          "Chats"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID чата"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Сообщения отмечены как прочитанные",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarkAsReadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный запрос"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "500": {
+            "description": "Ошибка при отметке сообщений"
+          }
+        }
+      }
+    },
+    "/employer/profile": {
+      "post": {
+        "summary": "Создать профиль работодателя",
+        "tags": [
+          "EmployerProfile"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmployerProfileInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Профиль работодателя создан",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "profile": {
+                      "$ref": "#/components/schemas/EmployerProfileResponse"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Профиль уже существует или неверные данные",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "500": {
+            "description": "Ошибка сервера"
+          }
+        }
+      },
+      "get": {
+        "summary": "Получить профиль работодателя текущего пользователя",
+        "tags": [
+          "EmployerProfile"
+        ],
+        "responses": {
+          "200": {
+            "description": "Профиль работодателя",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "profile": {
+                      "$ref": "#/components/schemas/EmployerProfileResponse"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Профиль работодателя не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Обновить профиль работодателя (только владелец)",
+        "tags": [
+          "EmployerProfile"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmployerProfileInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Профиль работодателя обновлён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "profile": {
+                      "$ref": "#/components/schemas/EmployerProfileResponse"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Профиль не найден"
+          },
+          "500": {
+            "description": "Ошибка сервера"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Удалить профиль работодателя",
+        "tags": [
+          "EmployerProfile"
+        ],
+        "responses": {
+          "200": {
+            "description": "Профиль работодателя удалён",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Профиль не найден"
+          },
+          "500": {
+            "description": "Ошибка сервера"
+          }
+        }
+      }
+    },
+    "/vacancy/{id}/candidates": {
+      "get": {
+        "summary": "Получить список подходящих кандидатов для вакансии (владелец вакансии)",
+        "tags": [
+          "EmployerProfile"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID вакансии"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Номер страницы"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Лимит на страницу (max 50)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Список кандидатов с пагинацией",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CandidateListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not your vacancy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Vacancy not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка сервера"
+          }
+        }
+      }
+    },
+    "/vacancy/{id}/candidates/{candidateId}/action": {
+      "post": {
+        "summary": "Применить действие к кандидату на вакансии (INVITE | REJECT | FAVORITE)",
+        "tags": [
+          "EmployerProfile"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID вакансии"
+          },
+          {
+            "in": "path",
+            "name": "candidateId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID пользователя-кандидата (userId)"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CandidateActionInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Действие применено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ActionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing parameters / Unknown action",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Not your vacancy"
+          },
+          "404": {
+            "description": "Vacancy or candidate not found"
+          },
+          "500": {
+            "description": "Ошибка сервера"
+          }
+        }
+      }
+    },
+    "/candidate/{id}": {
+      "get": {
+        "summary": "Получить профиль кандидата по userId (публичный/для работодателя)",
+        "tags": [
+          "EmployerProfile"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "userId кандидата"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Профиль кандидата",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "fullName": {
+                      "type": "string"
+                    },
+                    "desiredRole": {
+                      "type": "string"
+                    },
+                    "city": {
+                      "type": "string"
+                    },
+                    "skills": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "experience": {
+                      "type": "string"
+                    },
+                    "photoUrl": {
+                      "type": "string"
+                    },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "email": {
+                          "type": "string"
+                        },
+                        "phone": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Candidate not found"
+          },
+          "500": {
+            "description": "Ошибка сервера"
+          }
+        }
+      }
+    },
+    "/candidate/favorites/vacancy/{vacancyId}": {
+      "patch": {
+        "summary": "Добавить/удалить вакансию в избранное (только кандидат)",
+        "tags": [
+          "Favorites"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "vacancyId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID вакансии"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Статус избранного обновлен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FavoriteToggleResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный запрос"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Только кандидаты могут добавлять вакансии в избранное"
+          },
+          "404": {
+            "description": "Вакансия не найдена"
+          },
+          "500": {
+            "description": "Внутренняя ошибка сервера"
+          }
+        }
+      }
+    },
+    "/candidate/favorites/vacancies": {
+      "get": {
+        "summary": "Получить список избранных вакансий (только кандидат)",
+        "tags": [
+          "Favorites"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "description": "Номер страницы"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "description": "Количество элементов на странице"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Список избранных вакансий",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "favorites": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FavoriteVacancy"
+                      }
+                    },
+                    "pagination": {
+                      "$ref": "#/components/schemas/PaginationInfo"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Только кандидаты могут просматривать избранные вакансии"
+          },
+          "500": {
+            "description": "Ошибка при получении избранных вакансий"
+          }
+        }
+      }
+    },
+    "/employer/favorites/{vacancyId}/candidate/{candidateProfileId}": {
+      "patch": {
+        "summary": "Добавить/удалить кандидата в избранное (только работодатель)",
+        "tags": [
+          "Favorites"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "vacancyId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID вакансии"
+          },
+          {
+            "in": "path",
+            "name": "candidateProfileId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID профиля кандидата"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Статус избранного обновлен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FavoriteToggleResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный запрос"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Доступ запрещен"
+          },
+          "404": {
+            "description": "Вакансия или кандидат не найдены"
+          },
+          "500": {
+            "description": "Ошибка при обновлении статуса избранного"
+          }
+        }
+      }
+    },
+    "/employer/favorites/{vacancyId}/candidates": {
+      "get": {
+        "summary": "Получить список избранных кандидатов для вакансии (только работодатель)",
+        "tags": [
+          "Favorites"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "vacancyId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID вакансии"
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            },
+            "description": "Номер страницы"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 10
+            },
+            "description": "Количество элементов на странице"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Список избранных кандидатов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "favorites": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/FavoriteCandidate"
+                      }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "page": {
+                          "type": "number"
+                        },
+                        "limit": {
+                          "type": "number"
+                        },
+                        "totalCount": {
+                          "type": "number"
+                        },
+                        "totalPages": {
+                          "type": "number"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Доступ запрещен"
+          },
+          "404": {
+            "description": "Вакансия не найдена"
+          },
+          "500": {
+            "description": "Ошибка при получении избранных кандидатов"
+          }
+        }
+      }
+    },
+    "/responses/my": {
+      "get": {
+        "summary": "Получить список вакансий, на которые откликнулся текущий пользователь",
+        "tags": [
+          "Responses"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Список откликов пользователя",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RespondedVacancy"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка при получении откликов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/responses/{id}": {
+      "patch": {
+        "summary": "Обновить статус отклика (только владелец вакансии)",
+        "tags": [
+          "Responses"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID отклика"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResponseStatusUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Статус отклика обновлен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "updated": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный запрос",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Доступ запрещен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Отклик не найден",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Ошибка при обновлении статуса отклика",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/vacancy": {
+      "post": {
+        "summary": "Создать вакансию (черновик)",
+        "tags": [
+          "Vacancy"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VacancyInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Вакансия создана (черновик)"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "get": {
+        "summary": "Список вакансий с фильтрацией и сортировкой",
+        "tags": [
+          "Vacancy"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "titles",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "cities",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "salaryFrom",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "salaryTo",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "schedules",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "experienceFrom",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "experienceTo",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "recommended",
+                "new",
+                "popular"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Список вакансий"
+          }
+        }
+      }
+    },
+    "/vacancy/{id}": {
+      "parameters": [
+        {
+          "in": "path",
+          "name": "id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "summary": "Получить вакансию по ID (увеличивает views)",
+        "tags": [
+          "Vacancy"
+        ],
+        "responses": {
+          "200": {
+            "description": "Вакансия с деталями"
+          },
+          "404": {
+            "description": "Vacancy not found"
+          }
+        }
+      },
+      "put": {
+        "summary": "Обновить вакансию (только владелец)",
+        "tags": [
+          "Vacancy"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VacancyInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Вакансия обновлена"
+          },
+          "404": {
+            "description": "Вакансия не найдена"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Удалить вакансию (только владелец)",
+        "tags": [
+          "Vacancy"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Вакансия удалена"
+          },
+          "404": {
+            "description": "Вакансия не найдена"
+          }
+        }
+      }
+    },
+    "/vacancy/{id}/publish": {
+      "post": {
+        "summary": "Опубликовать вакансию (только владелец)",
+        "tags": [
+          "Vacancy"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Вакансия опубликована"
+          },
+          "404": {
+            "description": "Вакансия не найдена или нет прав"
+          }
+        }
+      }
+    },
+    "/vacancy/{id}/respond": {
+      "post": {
+        "summary": "Откликнуться на вакансию (только кандидат)",
+        "tags": [
+          "Vacancy"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "coverLetter": {
+                    "type": "string"
+                  },
+                  "resumes": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Отклик отправлен"
+          },
+          "400": {
+            "description": "Вы уже откликались или некорректные данные"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Доступ только для кандидатов"
+          },
+          "404": {
+            "description": "Vacancy not found"
+          }
+        }
+      }
+    },
+    "/vacancy/{id}/responses": {
+      "get": {
+        "summary": "Получить отклики на вакансию (только владелец)",
+        "tags": [
+          "Vacancy"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Список откликов"
+          },
+          "404": {
+            "description": "Vacancy not found"
+          }
+        }
+      }
+    },
+    "/vacancy/{id}/description": {
+      "get": {
+        "summary": "Получить описание вакансии с информацией о контактах и флагом отклика",
+        "tags": [
+          "Vacancy"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Детали вакансии"
+          },
+          "404": {
+            "description": "Vacancy not found"
+          }
+        }
+      }
+    },
+    "/candidate/resume": {
+      "patch": {
+        "summary": "Загрузить резюме (только кандидат)",
+        "tags": [
+          "Files"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Файл резюме (PDF, DOC, DOCX)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Резюме загружено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileUploadResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Только кандидаты могут загружать резюме"
+          },
+          "500": {
+            "description": "Ошибка при загрузке резюме"
+          }
+        }
+      },
+      "get": {
+        "summary": "Получить резюме (только кандидат)",
+        "tags": [
+          "Files"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Файл резюме",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "application/msword": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Только кандидаты могут просматривать резюме"
+          },
+          "404": {
+            "description": "Резюме не найдено"
+          },
+          "500": {
+            "description": "Ошибка при получении резюме"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Удалить резюме (только кандидат)",
+        "tags": [
+          "Files"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Резюме удалено"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Только кандидаты могут удалять резюме"
+          },
+          "404": {
+            "description": "Резюме не найдено"
+          },
+          "500": {
+            "description": "Ошибка при удалении резюме"
+          }
+        }
+      }
+    },
+    "/candidate/certificate": {
+      "patch": {
+        "summary": "Добавить сертификат (только кандидат)",
+        "tags": [
+          "Candidate"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CertificateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Сертификат добавлен"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "500": {
+            "description": "Ошибка при загрузке сертификата"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Удалить сертификат (только кандидат)",
+        "tags": [
+          "Candidate"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CertificateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Сертификат удален"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "500": {
+            "description": "Ошибка при удалении сертификата"
+          }
+        }
+      }
+    },
+    "/candidate/video": {
+      "patch": {
+        "summary": "Загрузить видео (только кандидат)",
+        "tags": [
+          "Candidate"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "videoUrl": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Видео загружено"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "500": {
+            "description": "Ошибка при загрузке видео"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Удалить видео (только кандидат)",
+        "tags": [
+          "Candidate"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Видео удалено"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "500": {
+            "description": "Ошибка при удалении видео"
+          }
+        }
+      }
+    },
+    "/employer/logo": {
+      "patch": {
+        "summary": "Загрузить логотип работодателя",
+        "tags": [
+          "Employer"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Логотип загружен"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "500": {
+            "description": "Ошибка при загрузке логотипа"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Удалить логотип работодателя",
+        "tags": [
+          "Employer"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Логотип удалён"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "500": {
+            "description": "Ошибка при удалении логотипа"
+          }
+        }
+      }
+    },
+    "/candidate/photo": {
+      "patch": {
+        "summary": "Загрузить фото кандидата",
+        "tags": [
+          "Candidate"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Фото загружено"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "500": {
+            "description": "Ошибка при загрузке фото"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Удалить фото кандидата",
+        "tags": [
+          "Candidate"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Фото удалено"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "500": {
+            "description": "Ошибка при удалении фото"
+          }
+        }
+      }
+    },
+    "/candidate/timezone": {
+      "patch": {
+        "summary": "Добавить часовой пояс кандидата",
+        "tags": [
+          "Candidate"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TimezoneRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Часовой пояс добавлен"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "500": {
+            "description": "Ошибка при добавлении часового пояса"
+          }
+        }
+      },
+      "get": {
+        "summary": "Получить часовые пояса кандидата",
+        "tags": [
+          "Candidate"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Список часовых поясов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TimezoneResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "500": {
+            "description": "Ошибка при получении часовых поясов"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Удалить часовой пояс кандидата",
+        "tags": [
+          "Candidate"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TimezoneRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Часовой пояс удалён"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "500": {
+            "description": "Ошибка при удалении часового пояса"
+          }
+        }
+      }
+    },
+    "/chat/upload": {
+      "post": {
+        "summary": "Загрузить файл для чата",
+        "tags": [
+          "Chat"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "chatId": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Файл загружен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FileUploadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверный тип файла"
+          },
+          "401": {
+            "description": "Не авторизован"
+          },
+          "403": {
+            "description": "Доступ запрещен"
+          },
+          "500": {
+            "description": "Ошибка при загрузке файла"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AvailabilityInterval": {
+        "type": "object",
+        "required": [
+          "dayOfWeek",
+          "start",
+          "end"
+        ],
+        "properties": {
+          "dayOfWeek": {
+            "type": "integer",
+            "description": "0 = Sunday, 1 = Monday ... 6 = Saturday",
+            "example": 1
+          },
+          "start": {
+            "type": "string",
+            "description": "Время начала в формате HH:MM (24h)",
+            "example": "09:00"
+          },
+          "end": {
+            "type": "string",
+            "description": "Время окончания в формате HH:MM. Если end < start — смена через полночь.",
+            "example": "18:00"
+          }
+        }
+      },
+      "CandidateProfileInput": {
+        "type": "object",
+        "required": [
+          "fullName",
+          "timezone"
+        ],
+        "properties": {
+          "fullName": {
+            "type": "string",
+            "example": "Улан Б."
+          },
+          "age": {
+            "type": "integer",
+            "example": 28
+          },
+          "city": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "experience": {
+            "type": "string"
+          },
+          "skills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "nodejs",
+              "typescript"
+            ]
+          },
+          "education": {
+            "type": "string"
+          },
+          "desiredRole": {
+            "type": "string"
+          },
+          "salary": {
+            "type": "integer"
+          },
+          "timezones": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Список подходящих часовых поясов (опционально)"
+          },
+          "languages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "level": {
+                  "type": "string",
+                  "example": "B2"
+                }
+              }
+            }
+          },
+          "resumeUrl": {
+            "type": "string"
+          },
+          "certificateUrls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "videoUrl": {
+            "type": "string"
+          },
+          "photoUrl": {
+            "type": "string"
+          },
+          "timezone": {
+            "type": "string",
+            "description": "Базовый часовой пояс, обязательное поле для availability (например, 'UTC+5')"
+          },
+          "anytime": {
+            "type": "boolean",
+            "description": "true — 'В любое время'"
+          },
+          "intervals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AvailabilityInterval"
+            },
+            "description": "Массив интервалов (требуется если anytime=false)"
+          }
+        }
+      },
+      "CandidateProfileResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "anytime": {
+            "type": "boolean"
+          },
+          "availability": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AvailabilityInterval"
+            }
+          },
+          "languages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "level": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "LanguageUpsertInput": {
+        "type": "object",
+        "required": [
+          "language",
+          "level"
+        ],
+        "properties": {
+          "language": {
+            "type": "string",
+            "example": "English"
+          },
+          "level": {
+            "type": "string",
+            "example": "B2"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          },
+          "details": {
+            "type": "string"
+          }
+        }
+      },
+      "StartChatRequest": {
+        "type": "object",
+        "required": [
+          "candidateId"
+        ],
+        "properties": {
+          "candidateId": {
+            "type": "string",
+            "description": "ID кандидата для начала чата"
+          },
+          "templateText": {
+            "type": "string",
+            "description": "Текст шаблонного сообщения"
+          }
+        }
+      },
+      "ChatResponse": {
+        "type": "object",
+        "properties": {
+          "chatId": {
+            "type": "string"
+          }
+        }
+      },
+      "MessageRequest": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "fileUrl": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "fileType": {
+            "type": "string"
+          },
+          "fileSize": {
+            "type": "number"
+          }
+        }
+      },
+      "Message": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "chatId": {
+            "type": "string"
+          },
+          "senderId": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "fileUrl": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "fileType": {
+            "type": "string"
+          },
+          "fileSize": {
+            "type": "number"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "sender": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              }
+            }
+          },
+          "ReadReceipt": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      },
+      "PaginatedMessages": {
+        "type": "object",
+        "properties": {
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Message"
+            }
+          },
+          "pagination": {
+            "type": "object",
+            "properties": {
+              "page": {
+                "type": "number"
+              },
+              "limit": {
+                "type": "number"
+              },
+              "totalCount": {
+                "type": "number"
+              },
+              "totalPages": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      },
+      "ChatInfo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "participants": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "user": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "role": {
+                      "type": "string"
+                    },
+                    "candidateProfile": {
+                      "type": "object",
+                      "properties": {
+                        "photoUrl": {
+                          "type": "string"
+                        },
+                        "desiredRole": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "employerProfile": {
+                      "type": "object",
+                      "properties": {
+                        "companyName": {
+                          "type": "string"
+                        },
+                        "logoUrl": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "MarkAsReadResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "updated": {
+            "type": "number"
+          }
+        }
+      },
+      "EmployerProfileInput": {
+        "type": "object",
+        "required": [
+          "companyName"
+        ],
+        "properties": {
+          "companyName": {
+            "type": "string",
+            "example": "Acme Ltd."
+          },
+          "industry": {
+            "type": "string",
+            "example": "IT"
+          },
+          "contactName": {
+            "type": "string",
+            "example": "Иван Иванов"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+996700000000"
+          },
+          "email": {
+            "type": "string",
+            "example": "hr@acme.com"
+          },
+          "description": {
+            "type": "string"
+          },
+          "legalInfo": {
+            "type": "string"
+          },
+          "logoUrl": {
+            "type": "string"
+          }
+        }
+      },
+      "EmployerProfileResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "companyName": {
+            "type": "string"
+          },
+          "industry": {
+            "type": "string"
+          },
+          "contactName": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "legalInfo": {
+            "type": "string"
+          },
+          "logoUrl": {
+            "type": "string"
+          }
+        }
+      },
+      "VacancyCandidateSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "desiredRole": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "skills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "userId": {
+            "type": "string"
+          },
+          "photoUrl": {
+            "type": "string"
+          },
+          "experience": {
+            "type": "string"
+          }
+        }
+      },
+      "CandidateListResponse": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "totalCount": {
+            "type": "integer"
+          },
+          "totalPages": {
+            "type": "integer"
+          },
+          "hasMore": {
+            "type": "boolean"
+          },
+          "candidates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VacancyCandidateSummary"
+            }
+          }
+        }
+      },
+      "CandidateActionInput": {
+        "type": "object",
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "type": "string",
+            "description": "Действие: INVITE | REJECT | FAVORITE",
+            "example": "INVITE"
+          }
+        }
+      },
+      "ActionResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "FavoriteToggleResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "favorited": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "FavoriteVacancy": {
+        "type": "object",
+        "properties": {
+          "favoriteId": {
+            "type": "string"
+          },
+          "vacancy": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "city": {
+                "type": "string"
+              },
+              "salaryFrom": {
+                "type": "number"
+              },
+              "salaryTo": {
+                "type": "number"
+              },
+              "currency": {
+                "type": "string"
+              },
+              "employer": {
+                "type": "object",
+                "properties": {
+                  "companyName": {
+                    "type": "string"
+                  },
+                  "logoUrl": {
+                    "type": "string"
+                  }
+                }
+              },
+              "status": {
+                "type": "string"
+              },
+              "publishedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          },
+          "favoritedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "FavoriteCandidate": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "desiredRole": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "skills": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "photoUrl": {
+            "type": "string"
+          },
+          "responseId": {
+            "type": "string"
+          },
+          "responseStatus": {
+            "type": "string"
+          },
+          "respondedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "PaginationInfo": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "number"
+          },
+          "limit": {
+            "type": "number"
+          },
+          "totalCount": {
+            "type": "number"
+          },
+          "totalPages": {
+            "type": "number"
+          },
+          "hasNextPage": {
+            "type": "boolean"
+          },
+          "hasPrevPage": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RespondedVacancy": {
+        "type": "object",
+        "properties": {
+          "responseId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "respondedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "vacancy": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "city": {
+                "type": "string"
+              },
+              "salaryFrom": {
+                "type": "number"
+              },
+              "salaryTo": {
+                "type": "number"
+              },
+              "currency": {
+                "type": "string"
+              },
+              "employer": {
+                "type": "object",
+                "properties": {
+                  "companyName": {
+                    "type": "string"
+                  },
+                  "logoUrl": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "ResponseStatusUpdate": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "VacancyInput": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "salaryFrom": {
+            "type": "number"
+          },
+          "salaryTo": {
+            "type": "number"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "schedule": {
+            "type": "string"
+          },
+          "experienceFrom": {
+            "type": "number"
+          },
+          "experienceTo": {
+            "type": "number"
+          },
+          "description": {
+            "type": "string"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "employmentType": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "messenger": {
+            "type": "string"
+          },
+          "hidePhone": {
+            "type": "boolean"
+          },
+          "hideEmail": {
+            "type": "boolean"
+          }
+        }
+      },
+      "FileUploadResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "fileUrl": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "fileSize": {
+            "type": "number"
+          },
+          "fileType": {
+            "type": "string"
+          }
+        }
+      },
+      "CertificateRequest": {
+        "type": "object",
+        "required": [
+          "certificateUrl"
+        ],
+        "properties": {
+          "certificateUrl": {
+            "type": "string"
+          }
+        }
+      },
+      "TimezoneRequest": {
+        "type": "object",
+        "required": [
+          "timezone"
+        ],
+        "properties": {
+          "timezone": {
+            "type": "string",
+            "example": "UTC+6"
+          }
+        }
+      },
+      "TimezoneResponse": {
+        "type": "object",
+        "properties": {
+          "timezones": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ChatFileUploadRequest": {
+        "type": "object",
+        "properties": {
+          "chatId": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Auth",
+      "description": "Аутентификация пользователей"
+    },
+    {
+      "name": "CandidateProfile",
+      "description": "Управление профилем соискателя (CRUD + языки + availability)"
+    },
+    {
+      "name": "Chats",
+      "description": "Управление чатами и сообщениями"
+    },
+    {
+      "name": "EmployerProfile",
+      "description": "Управление профилем работодателя и операции с кандидатами"
+    },
+    {
+      "name": "Favorites",
+      "description": "Управление избранными вакансиями и кандидатами"
+    },
+    {
+      "name": "Responses",
+      "description": "Управление откликами на вакансии"
+    },
+    {
+      "name": "Vacancy",
+      "description": "Вакансии и отклики"
+    },
+    {
+      "name": "Files",
+      "description": "Управление файлами (резюме, сертификаты, видео, логотипы, фото)"
+    },
+    {
+      "name": "Candidate",
+      "description": "Управление профилем кандидата"
+    },
+    {
+      "name": "Employer",
+      "description": "Управление профилем работодателя"
+    },
+    {
+      "name": "Chat",
+      "description": "Загрузка файлов для чата"
+    }
+  ]
+}
